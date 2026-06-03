@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina — Super Admin · Mockup · KAEL v1.1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:        #587c71;
+      --primary-dark:   #4a685e;
+      --primary-light:  #e8f0ee;
+      --primary-xlight: #f2f7f5;
+      --sidebar-bg:     #111c18;
+
+      --bg:        #edeeed;
+      --surface:   #ffffff;
+      --surface-2: #f7f9f8;
+
+      --text-main:      #1a2e26;
+      --text-secondary: #4a5e58;
+      --text-muted:     #8a9e98;
+
+      --border:        #dde8e4;
+      --border-strong: #c5d4cf;
+
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger:  #ef4444;
+      --info:    #3b82f6;
+
+      --r-sm: 6px;
+      --r:    10px;
+      --r-lg: 16px;
+
+      --shadow:    0 4px 12px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text-main); -webkit-font-smoothing:antialiased; }
+
+    /* ── DOC WRAPPER ──────────────────────────────── */
+    .doc { max-width:1380px; margin:0 auto; padding:48px 24px; }
+
+    /* ── COVER ────────────────────────────────────── */
+    .cover {
+      background:var(--sidebar-bg);
+      border-radius:var(--r-lg);
+      padding:48px 40px;
+      margin-bottom:72px;
+      text-align:center;
+      box-shadow:var(--shadow-lg);
+    }
+    .cover-eyebrow { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--primary); margin-bottom:14px; }
+    .cover-title   { font-size:32px; font-weight:800; color:white; letter-spacing:-1px; margin-bottom:8px; }
+    .cover-sub     { font-size:14px; color:rgba(255,255,255,.4); margin-bottom:32px; }
+    .cover-chips   { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .cover-chip    { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.65); font-size:11.5px; font-weight:500; padding:5px 12px; border-radius:20px; }
+
+    /* ── SECTION ──────────────────────────────────── */
+    .section { margin-bottom:88px; }
+    .section-hd { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .section-n  {
+      width:28px; height:28px; border-radius:50%;
+      background:var(--primary); color:white;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11.5px; font-weight:700; flex-shrink:0;
+    }
+    .section-title { font-size:16px; font-weight:700; }
+    .section-desc  { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+
+    .frame {
+      border-radius:var(--r-lg); overflow:hidden;
+      box-shadow:var(--shadow-lg); border:1px solid var(--border);
+    }
+
+    /* ── ANNOTATION ───────────────────────────────── */
+    .ann {
+      margin-top:10px;
+      background:#fffbeb; border:1.5px dashed #fcd34d;
+      border-radius:var(--r-sm);
+      padding:9px 14px;
+      font-size:11.5px; color:#78350f; line-height:1.55;
+      display:flex; gap:8px;
+    }
+    .ann::before { content:'→'; font-weight:700; flex-shrink:0; margin-top:1px; color:#d97706; }
+
+    /* ── APP SHELL ────────────────────────────────── */
+    .shell { display:flex; height:820px; }
+
+    /* Sidebar */
+    .sidebar {
+      width:232px; background:var(--sidebar-bg);
+      display:flex; flex-direction:column; flex-shrink:0;
+    }
+    .sb-logo { padding:18px 16px 14px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .sb-wordmark { font-size:17px; font-weight:800; color:white; letter-spacing:-.3px; }
+    .sb-tag {
+      display:inline-block; font-size:8.5px; font-weight:700;
+      background:var(--primary); color:white;
+      padding:2px 6px; border-radius:3px;
+      margin-left:6px; letter-spacing:.5px; text-transform:uppercase;
+      vertical-align:middle;
+    }
+
+    .sb-sec        { padding:14px 10px 4px; }
+    .sb-sec-label  { font-size:9px; font-weight:700; color:rgba(255,255,255,.25); text-transform:uppercase; letter-spacing:1.2px; padding:0 6px; margin-bottom:4px; }
+
+    .ni { width:14px; height:14px; opacity:.5; flex-shrink:0; color:white; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:8px 8px; border-radius:var(--r-sm); cursor:pointer; margin-bottom:1px; }
+    .nav-item.on { background:var(--primary); }
+    .nav-item.on .ni { opacity:1; }
+    .nt { font-size:12.5px; font-weight:500; color:rgba(255,255,255,.5); white-space:nowrap; }
+    .nav-item.on .nt { color:white; font-weight:600; }
+    .nb { margin-left:auto; background:var(--danger); color:white; font-size:9px; font-weight:700; padding:2px 5px; border-radius:10px; }
+
+    /* Drill-down header inside sidebar */
+    .sb-clinic-ctx {
+      margin:10px 10px 0;
+      padding:10px 11px;
+      background:rgba(255,255,255,.05);
+      border-radius:var(--r-sm);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .sb-clinic-ctx .back {
+      font-size:10.5px; color:rgba(255,255,255,.4); font-weight:500;
+      display:flex; align-items:center; gap:5px; margin-bottom:7px; cursor:pointer;
+    }
+    .sb-clinic-ctx .clinic-name { font-size:12.5px; font-weight:700; color:white; }
+    .sb-clinic-ctx .clinic-plan { font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
+
+    .sb-footer { margin-top:auto; padding:10px; border-top:1px solid rgba(255,255,255,.06); }
+    .user-chip { display:flex; align-items:center; gap:9px; padding:7px 8px; }
+    .avatar    { width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:white; flex-shrink:0; }
+    .user-name { font-size:11.5px; font-weight:600; color:white; }
+    .user-role { font-size:9.5px; color:rgba(255,255,255,.3); }
+
+    /* Topbar */
+    .topbar { height:52px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:10px; flex-shrink:0; }
+    .bc { font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:5px; flex-wrap:nowrap; }
+    .bc .sep { color:var(--border-strong); }
+    .bc .cur { color:var(--text-main); font-weight:600; }
+    .bc .clinic-pill { background:var(--primary-light); color:var(--primary-dark); font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
+    .tb-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+    /* Page */
+    .page  { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .pbody { flex:1; overflow-y:auto; padding:20px; background:var(--bg); }
+
+    /* ── COMMON COMPONENTS ────────────────────────── */
+    .btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:var(--r-sm); font-size:12.5px; font-weight:600; cursor:pointer; border:none; font-family:'Inter',sans-serif; white-space:nowrap; }
+    .btn-p  { background:var(--primary); color:white; }
+    .btn-o  { background:white; color:var(--text-secondary); border:1px solid var(--border); }
+    .btn-d  { background:none; color:var(--danger); border:1px solid #fca5a5; }
+    .btn-sm { padding:5px 10px; font-size:11px; }
+
+    .input { padding:8px 11px; border:1.5px solid var(--border); border-radius:var(--r-sm); font-size:12.5px; font-family:'Inter',sans-serif; color:var(--text-main); background:white; outline:none; }
+    .lbl   { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
+
+    .badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:20px; font-size:10.5px; font-weight:600; white-space:nowrap; }
+    .bg    { background:#dcfce7; color:#166534; }
+    .by    { background:#fef3c7; color:#92400e; }
+    .br    { background:#fee2e2; color:#991b1b; }
+    .bb    { background:#dbeafe; color:#1e40af; }
+    .bp    { background:#ede9fe; color:#5b21b6; }
+    .bn    { background:#f1f5f9; color:#475569; }
+    .bt    { background:var(--primary-light); color:var(--primary-dark); }
+
+    .card    { background:var(--surface); border-radius:var(--r); border:1px solid var(--border); }
+    .card-hd { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-hd h3 { font-size:13px; font-weight:700; }
+    .card-hd p  { font-size:11px; color:var(--text-muted); margin-top:1px; }
+
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .metric  { background:var(--surface); border-radius:var(--r); padding:16px 18px; border:1px solid var(--border); }
+    .m-lbl   { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:7px; }
+    .m-val   { font-size:24px; font-weight:800; letter-spacing:-1px; line-height:1; }
+    .m-delta { font-size:10.5px; font-weight:600; margin-top:5px; }
+    .up   { color:var(--success); }
+    .down { color:var(--danger); }
+
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:9px 14px; text-align:left; font-size:9.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; background:var(--surface-2); border-bottom:1px solid var(--border); }
+    tbody tr { border-bottom:1px solid var(--border); }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:var(--primary-xlight); }
+    tbody td { padding:11px 14px; font-size:12.5px; }
+
+    .hbar  { width:52px; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .hfill { height:100%; border-radius:3px; }
+    .hi { background:var(--success); }
+    .md { background:var(--warning); }
+    .lo { background:var(--danger); }
+
+    .g2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    .g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+    .tabs  { display:flex; border-bottom:2px solid var(--border); margin-bottom:18px; }
+    .tab   { padding:9px 14px; font-size:12.5px; font-weight:500; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .tab.on { color:var(--primary); font-weight:700; border-bottom-color:var(--primary); }
+
+    .toggle { width:34px; height:19px; border-radius:10px; background:var(--border); position:relative; cursor:pointer; flex-shrink:0; }
+    .toggle.on { background:var(--primary); }
+    .toggle::after { content:''; position:absolute; width:13px; height:13px; background:white; border-radius:50%; top:3px; left:3px; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .toggle.on::after { left:18px; }
+
+    .alert { display:flex; align-items:center; gap:9px; padding:10px 14px; border-radius:var(--r-sm); font-size:12.5px; margin-bottom:14px; }
+    .a-danger { background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; }
+    .a-warn   { background:#fef3c7; border:1px solid #fcd34d; color:#92400e; }
+    .a-info   { background:#dbeafe; border:1px solid #93c5fd; color:#1e40af; }
+
+    .chart { background:var(--primary-xlight); border-radius:var(--r-sm); height:108px; display:flex; align-items:flex-end; padding:12px 12px 0; gap:5px; }
+    .bar   { flex:1; background:var(--primary); border-radius:3px 3px 0 0; opacity:.5; }
+    .bar.hi{ opacity:1; background:var(--primary-dark); }
+    .clbls { display:flex; justify-content:space-between; padding:4px 12px 0; margin-bottom:14px; }
+    .clbls span { font-size:10px; color:var(--text-muted); }
+    .clbls span.cur { color:var(--primary); font-weight:700; }
+
+    .prog      { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:4px; }
+    .prog-fill { height:100%; background:var(--primary); border-radius:3px; }
+
+    .divider { height:1px; background:var(--border); margin:14px 0; }
+
+    .ib { width:32px; height:32px; border-radius:var(--r-sm); border:1px solid var(--border); background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-muted); position:relative; }
+
+    .tag-new { display:inline-block; font-size:9px; font-weight:700; background:#f59e0b; color:white; padding:1px 5px; border-radius:3px; margin-left:5px; vertical-align:middle; text-transform:uppercase; }
+
+    /* Architecture map */
+    .arch-level  { border-left:3px solid var(--primary); padding-left:14px; margin-bottom:24px; }
+    .arch-label  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--primary); margin-bottom:10px; }
+    .arch-row    { display:flex; gap:8px; flex-wrap:wrap; }
+    .arch-module { background:var(--primary-xlight); border:1px solid var(--border); border-radius:8px; padding:10px 14px; flex:1; min-width:160px; }
+    .arch-module h4 { font-size:12px; font-weight:700; margin-bottom:3px; }
+    .arch-module p  { font-size:10.5px; color:var(--text-muted); line-height:1.5; }
+  </style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ══════════════════════════════════════════════
+       COVER
+  ══════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-eyebrow">Mockup · KAEL v1.1 · Junho 2026</div>
+    <div class="cover-title">Lumina — Super Admin</div>
+    <div class="cover-sub">Painel exclusivo do dono da plataforma · gerência total sobre todas as clínicas clientes</div>
+    <div class="cover-chips">
+      <div class="cover-chip">71+ tarefas mapeadas</div>
+      <div class="cover-chip">1 painel · 2 níveis de navegação</div>
+      <div class="cover-chip">RBAC para equipe interna</div>
+      <div class="cover-chip">React 19 + TypeScript + Supabase</div>
+      <div class="cover-chip">Inter · #587c71</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SEÇÃO 0 — DESIGN TOKENS
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">0</div>
+      <div>
+        <div class="section-title">Design Tokens</div>
+        <div class="section-desc">Paleta derivada do código existente · tipografia · estados visuais</div>
+      </div>
+    </div>
+    <div class="frame" style="padding:28px;background:white;display:flex;flex-direction:column;gap:24px;">
+      <div>
+        <p style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:12px;">Paleta de Cores</p>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#111c18;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Sidebar</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#111c18</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#1a2e26;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Text Main</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#1a2e26</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#587c71;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Primary</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#587c71</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#4a685e;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Primary Dark</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#4a685e</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#e8f0ee;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Primary Light</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#e8f0ee</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#edeeed;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Background</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#edeeed</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#22c55e;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Success</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#22c55e</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#f59e0b;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Warning</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#f59e0b</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#ef4444;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Danger</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#ef4444</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#3b82f6;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Info</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#3b82f6</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#dde8e4;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Border</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#dde8e4</div></div></div>
+          <div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);"><div style="height:48px;background:#ffffff;border-bottom:1px solid #eee;"></div><div style="padding:7px;"><div style="font-size:10px;font-weight:700;">Surface</div><div style="font-size:9px;color:var(--text-muted);font-family:monospace">#ffffff</div></div></div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:12px;">Escala Tipográfica — Inter</p>
+        <div style="background:var(--surface-2);border-radius:var(--r);padding:20px;border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:26px;font-weight:800;color:var(--text-main);letter-spacing:-1px;line-height:1;">Display 26 · 800 — Métricas e números</div>
+          <div style="font-size:20px;font-weight:700;color:var(--text-main);letter-spacing:-.4px;">H1 20 · 700 — Título de página</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-main);">H2 15 · 700 — Título de seção</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-main);">H3 13 · 600 — Título de card</div>
+          <div style="font-size:12.5px;font-weight:400;color:var(--text-main);">Body 12.5 · 400 — Tabela e conteúdo</div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-secondary);">Label 11 · 500 — Campos e labels</div>
+          <div style="font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;">CAPTION 9.5 · 700 · UPPERCASE — cabeçalho de tabela</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 1 — DASHBOARD GLOBAL (nível plataforma)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">1</div>
+      <div>
+        <div class="section-title">Dashboard Global — Nível Plataforma</div>
+        <div class="section-desc">T1.2 · T3.2 · T3.3 · T3.4 — Visão executiva de todas as clínicas, MRR, alertas, health scores</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+
+        <!-- Sidebar — nível plataforma -->
+        <div class="sidebar">
+          <div class="sb-logo">
+            <div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Plataforma</div>
+            <div class="nav-item on">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+              <span class="nt">Dashboard</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+              <span class="nt">Clínicas</span>
+            </div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Financeiro</div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="14" height="9" rx="1.5"/><path d="M1 7h14M5 11h2"/></svg>
+              <span class="nt">Faturamento</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 14V6M7 14V2M11 14V9M15 14V5"/></svg>
+              <span class="nt">Relatórios</span>
+            </div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Controle</div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
+              <span class="nt">Feature Flags</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L14 4v4c0 3.5-2.5 6-6 7C2 14 2 8 2 8V4L8 1z"/></svg>
+              <span class="nt">Segurança / LGPD</span>
+              <span class="nb">3</span>
+            </div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Acesso</div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="4" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="4" r="2"/><path d="M14 12c-.5-1.8-1.8-3-3.2-3.2"/></svg>
+              <span class="nt">Equipe Admin</span>
+            </div>
+          </div>
+          <div class="sb-footer">
+            <div class="user-chip">
+              <div class="avatar">RZ</div>
+              <div><div class="user-name">Raphael Z.</div><div class="user-role">Owner · Super Admin</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page -->
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span class="cur">Dashboard</span></div>
+            <div class="tb-right">
+              <div class="ib">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a5 5 0 0 0-5 5v2.5L1.5 11h13L13 9.5V7a5 5 0 0 0-5-5zM6.5 13.5a1.5 1.5 0 0 0 3 0"/></svg>
+                <div style="position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid white;"></div>
+              </div>
+              <button class="btn btn-o" style="font-size:11.5px;">Exportar</button>
+              <button class="btn btn-p" style="font-size:11.5px;">+ Nova Clínica</button>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="alert a-danger">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v4M8 11h.01"/></svg>
+              <strong>3 clínicas em risco de cancelamento</strong> — Inativas há 14+ dias sem acesso. <span style="text-decoration:underline;cursor:pointer;margin-left:4px;">Ver detalhes →</span>
+            </div>
+
+            <div class="metrics">
+              <div class="metric"><div class="m-lbl">MRR Total</div><div class="m-val">R$47.3k</div><div class="m-delta up">↑ 8.2% vs mês anterior</div></div>
+              <div class="metric"><div class="m-lbl">Clínicas Ativas</div><div class="m-val">124</div><div class="m-delta up">↑ +6 novas este mês</div></div>
+              <div class="metric"><div class="m-lbl">Churn Rate</div><div class="m-val" style="color:var(--danger)">2.1%</div><div class="m-delta down">↑ +0.4pp vs mês anterior</div></div>
+              <div class="metric"><div class="m-lbl">Em Risco</div><div class="m-val" style="color:var(--warning)">3</div><div class="m-delta down">Requer ação imediata</div></div>
+            </div>
+
+            <div class="g2">
+              <div class="card">
+                <div class="card-hd">
+                  <div><h3>Clínicas · Health Score</h3><p>124 ativas · ordenado por risco</p></div>
+                  <button class="btn btn-o btn-sm">Ver todas</button>
+                </div>
+                <table>
+                  <thead><tr><th>Clínica</th><th>Plano</th><th>Health</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Clínica Aurora</strong><br><span style="font-size:10.5px;color:var(--text-muted)">São Paulo · SP</span></td>
+                      <td><span class="badge bb">Pro</span></td>
+                      <td><div style="display:flex;align-items:center;gap:6px;"><div class="hbar"><div class="hfill hi" style="width:88%"></div></div><span style="font-size:10.5px;color:#166534;font-weight:600">88</span></div></td>
+                      <td><span class="badge bg">Ativa</span></td>
+                      <td><button class="btn btn-o btn-sm">Entrar</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Rejuvenece BH</strong><br><span style="font-size:10.5px;color:var(--text-muted)">Belo Horizonte · MG</span></td>
+                      <td><span class="badge bp">Enterprise</span></td>
+                      <td><div style="display:flex;align-items:center;gap:6px;"><div class="hbar"><div class="hfill hi" style="width:97%"></div></div><span style="font-size:10.5px;color:#166534;font-weight:600">97</span></div></td>
+                      <td><span class="badge bg">Ativa</span></td>
+                      <td><button class="btn btn-o btn-sm">Entrar</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Studio Beleza</strong><br><span style="font-size:10.5px;color:var(--text-muted)">Campinas · SP</span></td>
+                      <td><span class="badge bn">Básico</span></td>
+                      <td><div style="display:flex;align-items:center;gap:6px;"><div class="hbar"><div class="hfill md" style="width:52%"></div></div><span style="font-size:10.5px;color:#92400e;font-weight:600">52</span></div></td>
+                      <td><span class="badge by">Em risco</span></td>
+                      <td><button class="btn btn-o btn-sm">Entrar</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Face &amp; Form</strong><br><span style="font-size:10.5px;color:var(--text-muted)">Rio de Janeiro · RJ</span></td>
+                      <td><span class="badge bn">Básico</span></td>
+                      <td><div style="display:flex;align-items:center;gap:6px;"><div class="hbar"><div class="hfill lo" style="width:18%"></div></div><span style="font-size:10.5px;color:#991b1b;font-weight:600">18</span></div></td>
+                      <td><span class="badge br">Em risco</span></td>
+                      <td><button class="btn btn-o btn-sm">Entrar</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Espaço Zen</strong><br><span style="font-size:10.5px;color:var(--text-muted)">Curitiba · PR</span></td>
+                      <td><span class="badge bb">Pro</span></td>
+                      <td><div style="display:flex;align-items:center;gap:6px;"><div class="hbar"><div class="hfill hi" style="width:91%"></div></div><span style="font-size:10.5px;color:#166534;font-weight:600">91</span></div></td>
+                      <td><span class="badge bg">Ativa</span></td>
+                      <td><button class="btn btn-o btn-sm">Entrar</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="card" style="padding:18px;">
+                  <h3 style="font-size:13px;font-weight:700;margin-bottom:10px;">MRR · Últimos 6 meses</h3>
+                  <div class="chart">
+                    <div class="bar" style="height:40%"></div><div class="bar" style="height:50%"></div>
+                    <div class="bar" style="height:62%"></div><div class="bar" style="height:72%"></div>
+                    <div class="bar" style="height:85%"></div><div class="bar hi" style="height:100%"></div>
+                  </div>
+                  <div class="clbls"><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span class="cur">Jun</span></div>
+                  <div class="divider"></div>
+                  <div class="g2">
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Novas assinaturas</div><div style="font-size:18px;font-weight:800;color:var(--text-main)">+R$3.8k</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Cancelamentos</div><div style="font-size:18px;font-weight:800;color:var(--danger)">−R$0.9k</div></div>
+                  </div>
+                </div>
+                <div class="card" style="padding:18px;">
+                  <h3 style="font-size:13px;font-weight:700;margin-bottom:10px;">Distribuição de Planos</h3>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Básico</span><span style="font-size:11px;color:var(--text-muted)">68 clínicas · 55%</span></div><div class="prog"><div class="prog-fill" style="width:55%;background:#8a9e98"></div></div></div>
+                    <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Pro</span><span style="font-size:11px;color:var(--text-muted)">48 clínicas · 39%</span></div><div class="prog"><div class="prog-fill" style="width:39%"></div></div></div>
+                    <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Enterprise</span><span style="font-size:11px;color:var(--text-muted)">8 clínicas · 6%</span></div><div class="prog"><div class="prog-fill" style="width:6%;background:#8b5cf6"></div></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">
+      Botão <strong>"Entrar"</strong> em cada linha leva ao drill-down daquela clínica (Tela 2). Não é impersonation de usuário — é acesso direto de super-admin ao dado da clínica, com registro automático em trilha de auditoria ("Raphael Z. acessou dados de Clínica Aurora · 10:31"). Health score: último acesso (35%) + usuários ativos (25%) + agendamentos últimos 7d (25%) + pagamento (15%).
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 2 — DENTRO DE UMA CLÍNICA (drill-down)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">2</div>
+      <div>
+        <div class="section-title">Drill-down: dentro de uma clínica</div>
+        <div class="section-desc">ADMIN-USU · ADMIN-SAL · ADMIN-PRO · ADMIN-COM · ADMIN-REL · ADMIN-CFG · ADMIN-SEC — Você gerencia tudo da clínica selecionada</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+
+        <!-- Sidebar — modo clínica -->
+        <div class="sidebar">
+          <div class="sb-logo">
+            <div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div>
+          </div>
+
+          <!-- Context da clínica ativa -->
+          <div class="sb-clinic-ctx">
+            <div class="back">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L4 6l4 4"/></svg>
+              Voltar à plataforma
+            </div>
+            <div class="clinic-name">Clínica Aurora</div>
+            <div class="clinic-plan">Plano Pro · Ativa · Health 88</div>
+          </div>
+
+          <div class="sb-sec">
+            <div class="sb-sec-label">Operacional</div>
+            <div class="nav-item on">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="4" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="4" r="2"/><path d="M14 12c-.5-1.8-1.8-3-3.2-3.2"/></svg>
+              <span class="nt">Equipe</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3.5l2 1.5"/></svg>
+              <span class="nt">Procedimentos</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V2h12v12H2zM5 14v-5h6v5"/></svg>
+              <span class="nt">Salas</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 3V1M11 3V1M2 7h12"/></svg>
+              <span class="nt">Agenda</span>
+            </div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Financeiro</div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 14V6M7 14V2M11 14V9M15 14V5"/></svg>
+              <span class="nt">Relatórios</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3l-2 2"/></svg>
+              <span class="nt">Comissões</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="14" height="9" rx="1.5"/><path d="M1 7h14M5 11h2"/></svg>
+              <span class="nt">Faturamento</span>
+            </div>
+          </div>
+          <div class="sb-sec">
+            <div class="sb-sec-label">Admin</div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
+              <span class="nt">Configurações</span>
+            </div>
+            <div class="nav-item">
+              <svg class="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L14 4v4c0 3.5-2.5 6-6 7C2 14 2 8 2 8V4L8 1z"/></svg>
+              <span class="nt">Segurança</span>
+            </div>
+          </div>
+          <div class="sb-footer">
+            <div class="user-chip">
+              <div class="avatar">RZ</div>
+              <div><div class="user-name">Raphael Z.</div><div class="user-role">Owner · Super Admin</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page: equipe da clínica -->
+        <div class="page">
+          <div class="topbar">
+            <div class="bc">
+              <span>Plataforma</span><span class="sep">›</span>
+              <span>Clínicas</span><span class="sep">›</span>
+              <span class="clinic-pill">Clínica Aurora</span><span class="sep">›</span>
+              <span class="cur">Equipe</span>
+            </div>
+            <div class="tb-right">
+              <input class="input" placeholder="Buscar membro…" style="width:155px;font-size:11.5px;padding:6px 10px;">
+              <button class="btn btn-p" style="font-size:11.5px;">+ Novo membro</button>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="alert a-info">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v4M8 11h.01"/></svg>
+              Você está gerenciando dados de <strong>Clínica Aurora</strong>. Todas as ações são registradas na trilha de auditoria.
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-hd">
+                <div><h3>Membros da Equipe</h3><p>5 membros · 4 ativos</p></div>
+              </div>
+              <table>
+                <thead><tr><th>Membro</th><th>Role</th><th>Especialidade</th><th>Status</th><th>Último Acesso</th><th></th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;">MA</div><div><strong style="font-size:12.5px;">Marina Alves</strong><br><span style="font-size:10.5px;color:var(--text-muted)">marina@aurora.com.br</span></div></div></td>
+                    <td><span class="badge bp">Proprietária</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">Gestão</td>
+                    <td><span class="badge bg">Ativo</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">Hoje · 10:32</td>
+                    <td><button class="btn btn-o btn-sm">Editar</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;background:var(--primary-dark)">CS</div><div><strong style="font-size:12.5px;">Carla Souza</strong><br><span style="font-size:10.5px;color:var(--text-muted)">carla@aurora.com.br</span></div></div></td>
+                    <td><span class="badge bt">Profissional</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">Estética Avançada</td>
+                    <td><span class="badge bg">Ativo</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">Ontem · 15:47</td>
+                    <td><button class="btn btn-o btn-sm">Editar</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;">AL</div><div><strong style="font-size:12.5px;">Ana Lima</strong><br><span style="font-size:10.5px;color:var(--text-muted)">ana@aurora.com.br</span></div></div></td>
+                    <td><span class="badge bb">Gerente</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">Harmonização</td>
+                    <td><span class="badge bg">Ativo</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">2 dias</td>
+                    <td><button class="btn btn-o btn-sm">Editar</button></td>
+                  </tr>
+                  <tr style="opacity:.55;">
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;background:var(--border-strong);color:var(--text-muted)">JP</div><div><strong style="font-size:12.5px;color:var(--text-muted)">João Pedro</strong><br><span style="font-size:10.5px;color:var(--text-muted)">jp@aurora.com.br</span></div></div></td>
+                    <td><span class="badge bn">Recepção</span></td>
+                    <td style="font-size:12px;color:var(--text-muted)">—</td>
+                    <td><span class="badge br">Desativado</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">14 dias</td>
+                    <td><button class="btn btn-o btn-sm">Reativar</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card" style="padding:18px;">
+              <h3 style="font-size:13px;font-weight:700;margin-bottom:12px;">Roles da Clínica (RBAC)</h3>
+              <div class="g3">
+                <div style="background:var(--primary-xlight);border-radius:var(--r-sm);padding:11px;border:1px solid var(--border);"><div style="font-size:11.5px;font-weight:700;margin-bottom:3px;">Proprietário</div><div style="font-size:10.5px;color:var(--text-muted);line-height:1.5;">Acesso total · fatura · config</div></div>
+                <div style="background:var(--primary-xlight);border-radius:var(--r-sm);padding:11px;border:1px solid var(--border);"><div style="font-size:11.5px;font-weight:700;margin-bottom:3px;">Gerente</div><div style="font-size:10.5px;color:var(--text-muted);line-height:1.5;">Equipe · relatórios · agenda</div></div>
+                <div style="background:var(--primary-xlight);border-radius:var(--r-sm);padding:11px;border:1px solid var(--border);"><div style="font-size:11.5px;font-weight:700;margin-bottom:3px;">Profissional</div><div style="font-size:10.5px;color:var(--text-muted);line-height:1.5;">Própria agenda · prontuários</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">
+      A sidebar em modo drill-down mantém a identidade do <strong>seu</strong> admin (Lumina Admin, verde), mas exibe um "contexto" no topo com o nome da clínica ativa e o link "← Voltar à plataforma". O breadcrumb <span style="background:var(--primary-light);color:var(--primary-dark);padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:600;">Clínica Aurora</span> é sempre visível — você nunca perde a noção de onde está. O banner azul lembra que você está em modo admin gerenciando dados de terceiros, com registro automático em auditoria.
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 3 — PROCEDIMENTOS (dentro de clínica)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">3</div>
+      <div>
+        <div class="section-title">Procedimentos + Comissões (dentro de clínica)</div>
+        <div class="section-desc">ADMIN-PRO-01 a 05 · ADMIN-COM-04/05 — CRUD, pacotes, escalas de comissão progressivas</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span>Clínicas</span><span class="sep">›</span><span class="clinic-pill">Clínica Aurora</span><span class="sep">›</span><span class="cur">Procedimentos</span></div>
+            <div class="tb-right">
+              <div class="tabs" style="border:none;margin:0;"><div class="tab on" style="padding:6px 12px;font-size:12px;">Procedimentos</div><div class="tab" style="padding:6px 12px;font-size:12px;">Pacotes</div><div class="tab" style="padding:6px 12px;font-size:12px;">Comissões</div></div>
+              <button class="btn btn-p" style="font-size:11.5px;">+ Novo</button>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="card">
+              <div class="card-hd">
+                <div><h3>Procedimentos Estéticos</h3><p>12 cadastrados · 10 ativos</p></div>
+                <div style="display:flex;gap:8px;"><input class="input" placeholder="Buscar…" style="width:130px;font-size:11.5px;padding:5px 9px;"><button class="btn btn-o btn-sm">Filtrar</button></div>
+              </div>
+              <table>
+                <thead><tr><th>Procedimento</th><th>Categoria</th><th>Duração</th><th>Preço</th><th>Comissão padrão</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Botox — Testa</strong></td><td><span class="badge bb">Toxina</span></td><td style="font-size:12px;color:var(--text-secondary)">45 min</td><td style="font-weight:700;">R$650</td><td style="font-size:12px;color:var(--text-secondary)">20% · R$130</td><td><span class="badge bg">Ativo</span></td><td><button class="btn btn-o btn-sm">Editar</button></td></tr>
+                  <tr><td><strong>Preenchimento Labial</strong></td><td><span class="badge bp">Preenchimento</span></td><td style="font-size:12px;color:var(--text-secondary)">60 min</td><td style="font-weight:700;">R$1.200</td><td style="font-size:12px;color:var(--text-secondary)">15% · R$180</td><td><span class="badge bg">Ativo</span></td><td><button class="btn btn-o btn-sm">Editar</button></td></tr>
+                  <tr><td><strong>Drenagem Linfática</strong></td><td><span class="badge bt">Massagem</span></td><td style="font-size:12px;color:var(--text-secondary)">90 min</td><td style="font-weight:700;">R$250</td><td style="font-size:12px;color:var(--text-secondary)">25% · R$62,50</td><td><span class="badge bg">Ativo</span></td><td><button class="btn btn-o btn-sm">Editar</button></td></tr>
+                  <tr><td><strong>Bioestimulador</strong></td><td><span class="badge bp">Preenchimento</span></td><td style="font-size:12px;color:var(--text-secondary)">75 min</td><td style="font-weight:700;">R$900</td><td style="font-size:12px;color:var(--text-secondary)">18% · R$162</td><td><span class="badge bg">Ativo</span></td><td><button class="btn btn-o btn-sm">Editar</button></td></tr>
+                  <tr style="opacity:.5;"><td><strong style="color:var(--text-muted)">Peeling Químico</strong></td><td><span class="badge bn">Pele</span></td><td style="font-size:12px;color:var(--text-muted)">30 min</td><td style="font-weight:700;color:var(--text-muted);text-decoration:line-through">R$380</td><td style="font-size:12px;color:var(--text-muted)">—</td><td><span class="badge bn">Inativo</span></td><td><button class="btn btn-o btn-sm">Reativar</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Tab "Comissões" exibe escalas progressivas por profissional (ex.: até R$5k/mês = 15%, acima = 20%). Tab "Pacotes" (ADMIN-PRO-05) agrupa procedimentos em combos com preço diferenciado. Inativo nunca é apagado — soft delete preserva histórico de agendamentos anteriores.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 4 — SALAS (dentro de clínica)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">4</div>
+      <div>
+        <div class="section-title">Salas (dentro de clínica)</div>
+        <div class="section-desc">ADMIN-SAL-01 a 04 — Listar, criar, editar, desativar · status em tempo real via Supabase Realtime</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span>Clínicas</span><span class="sep">›</span><span class="clinic-pill">Clínica Aurora</span><span class="sep">›</span><span class="cur">Salas</span></div>
+            <div class="tb-right"><button class="btn btn-p" style="font-size:11.5px;">+ Nova sala</button></div>
+          </div>
+          <div class="pbody">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+              <div class="card" style="padding:18px;border-top:3px solid var(--success);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:14px;font-weight:700;">Sala 1</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Procedimentos Gerais</div></div><span class="badge bg">Disponível</span></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Maca elétrica · Iluminador LED · Suporte derma</div>
+                <div style="display:flex;gap:6px;"><button class="btn btn-o btn-sm" style="flex:1;">Editar</button><button class="btn btn-sm btn-d">Excluir</button></div>
+              </div>
+              <div class="card" style="padding:18px;border-top:3px solid var(--warning);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:14px;font-weight:700;">Sala 2</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Laser</div></div><span class="badge by">Em uso</span></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Laser Fracionado · Óculos de proteção</div>
+                <div style="display:flex;gap:6px;"><button class="btn btn-o btn-sm" style="flex:1;">Editar</button><button class="btn btn-sm btn-d">Excluir</button></div>
+              </div>
+              <div class="card" style="padding:18px;border-top:3px solid var(--info);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:14px;font-weight:700;">Sala 3</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Massoterapia</div></div><span class="badge bb">Agendada · 14h</span></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Maca · Almofadas · Vaporizador</div>
+                <div style="display:flex;gap:6px;"><button class="btn btn-o btn-sm" style="flex:1;">Editar</button><button class="btn btn-sm btn-d">Excluir</button></div>
+              </div>
+              <div class="card" style="padding:18px;border-top:3px solid var(--border);background:#fafafa;opacity:.6;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:14px;font-weight:700;color:var(--text-muted);">Sala 4</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Em manutenção</div></div><span class="badge bn">Desativada</span></div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Estética Corporal</div>
+                <div style="display:flex;gap:6px;"><button class="btn btn-o btn-sm" style="flex:1;">Reativar</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Cards com borda superior colorida comunicam status em 300ms: verde = disponível, amarelo = em uso, azul = agendada, cinza = desativada. Supabase Realtime pode atualizar o status sem reload — útil quando você está monitorando ocupação de salas em tempo real.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 5 — RELATÓRIOS (dentro de clínica)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">5</div>
+      <div>
+        <div class="section-title">Relatórios & KPIs (dentro de clínica)</div>
+        <div class="section-desc">ADMIN-REL-01 a 05 · T3.5 — Metas, comissões, captação, saúde · exportação PDF/Excel · envio agendado</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span>Clínicas</span><span class="sep">›</span><span class="clinic-pill">Clínica Aurora</span><span class="sep">›</span><span class="cur">Relatórios</span></div>
+            <div class="tb-right">
+              <select class="input" style="font-size:12px;padding:6px 10px;"><option>Junho 2026</option><option>Maio 2026</option></select>
+              <button class="btn btn-o" style="font-size:11.5px;">↓ PDF</button>
+              <button class="btn btn-o" style="font-size:11.5px;">↓ Excel</button>
+              <button class="btn btn-p" style="font-size:11.5px;">Agendar envio</button>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="tabs">
+              <div class="tab on">Visão Geral</div><div class="tab">Comissões</div>
+              <div class="tab">Captação</div><div class="tab">Saúde</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="m-lbl">Faturamento Bruto</div><div class="m-val">R$38.4k</div><div class="m-delta up">↑ 12% vs mai/26</div></div>
+              <div class="metric"><div class="m-lbl">Atendimentos</div><div class="m-val">194</div><div class="m-delta up">↑ 22 vs mai/26</div></div>
+              <div class="metric"><div class="m-lbl">Ticket Médio</div><div class="m-val">R$198</div><div class="m-delta down">↓ 3% vs mai/26</div></div>
+              <div class="metric"><div class="m-lbl">Taxa de Retorno</div><div class="m-val">67%</div><div class="m-delta up">↑ 5pp vs mai/26</div></div>
+            </div>
+            <div class="g2">
+              <div class="card" style="padding:18px;">
+                <h3 style="font-size:13px;font-weight:700;margin-bottom:12px;">Comissões · Junho</h3>
+                <div style="display:flex;flex-direction:column;gap:9px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--primary-xlight);border-radius:var(--r-sm);"><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;background:var(--primary-dark)">CS</div><span style="font-size:12.5px;font-weight:600;">Carla Souza</span></div><div style="text-align:right;"><div style="font-size:14px;font-weight:800;color:var(--primary)">R$2.340</div><div style="font-size:10px;color:var(--text-muted)">18 atend.</div></div></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--primary-xlight);border-radius:var(--r-sm);"><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;">AL</div><span style="font-size:12.5px;font-weight:600;">Ana Lima</span></div><div style="text-align:right;"><div style="font-size:14px;font-weight:800;color:var(--primary)">R$1.890</div><div style="font-size:10px;color:var(--text-muted)">14 atend.</div></div></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--primary-xlight);border-radius:var(--r-sm);"><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;background:#6366f1">RD</div><span style="font-size:12.5px;font-weight:600;">Rafael Dias</span></div><div style="text-align:right;"><div style="font-size:14px;font-weight:800;color:var(--primary)">R$1.240</div><div style="font-size:10px;color:var(--text-muted)">11 atend.</div></div></div>
+                </div>
+              </div>
+              <div class="card" style="padding:18px;">
+                <h3 style="font-size:13px;font-weight:700;margin-bottom:12px;">Top Procedimentos · Junho</h3>
+                <div style="display:flex;flex-direction:column;gap:11px;">
+                  <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Botox — Testa</span><span style="font-size:10.5px;color:var(--text-muted)">48 · R$31.2k</span></div><div class="prog"><div class="prog-fill" style="width:90%"></div></div></div>
+                  <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Preenchimento Labial</span><span style="font-size:10.5px;color:var(--text-muted)">31 · R$37.2k</span></div><div class="prog"><div class="prog-fill" style="width:65%"></div></div></div>
+                  <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Drenagem Linfática</span><span style="font-size:10.5px;color:var(--text-muted)">28 · R$7k</span></div><div class="prog"><div class="prog-fill" style="width:55%"></div></div></div>
+                  <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">Bioestimulador</span><span style="font-size:10.5px;color:var(--text-muted)">19 · R$17.1k</span></div><div class="prog"><div class="prog-fill" style="width:38%"></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">"Agendar envio" (T3.5) abre modal: selecionar relatório, frequência (semanal/mensal) e formato. Disparo via Supabase Edge Function + Resend. Tab "Saúde" (ADMIN-REL-05) mostra: ocupação de salas, clientes inativos há 60+ dias, NPS e metas vs. realizado.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 6 — FATURAMENTO + FEATURE FLAGS (plataforma global)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">6</div>
+      <div>
+        <div class="section-title">Faturamento + Feature Flags — Global</div>
+        <div class="section-desc">T1.5 · T1.6 · T1.9 · T2.6 — Assinaturas Stripe, suspensão automática, upgrade/downgrade, flags por clínica</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span class="cur">Faturamento</span></div>
+            <div class="tb-right"><button class="btn btn-o" style="font-size:11.5px;">Sincronizar Stripe</button></div>
+          </div>
+          <div class="pbody">
+            <div class="tabs"><div class="tab on">Assinaturas</div><div class="tab">Feature Flags</div><div class="tab">Histórico</div></div>
+
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-hd"><div><h3>Assinaturas Ativas</h3><p>124 clínicas · ordenado por vencimento</p></div></div>
+              <table>
+                <thead><tr><th>Clínica</th><th>Plano</th><th>Valor/mês</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Rejuvenece BH</strong></td><td><span class="badge bp">Enterprise</span></td><td style="font-weight:700;">R$599</td><td style="font-size:12px;color:var(--text-secondary)">15/06/2026</td><td><span class="badge bg">Pago</span></td><td><span class="badge bg">Ativa</span></td><td><button class="btn btn-o btn-sm">Gerenciar</button></td></tr>
+                  <tr><td><strong>Clínica Aurora</strong></td><td><span class="badge bb">Pro</span></td><td style="font-weight:700;">R$299</td><td style="font-size:12px;color:var(--text-secondary)">18/06/2026</td><td><span class="badge bg">Pago</span></td><td><span class="badge bg">Ativa</span></td><td><button class="btn btn-o btn-sm">Gerenciar</button></td></tr>
+                  <tr><td><strong>Studio Beleza</strong></td><td><span class="badge bn">Básico</span></td><td style="font-weight:700;">R$149</td><td style="font-size:12px;color:var(--warning);font-weight:600)">02/06/2026 · HOJE</td><td><span class="badge by">Pendente</span></td><td><span class="badge by">Em risco</span></td><td><button class="btn btn-o btn-sm">Gerenciar</button></td></tr>
+                  <tr><td><strong>Face &amp; Form</strong></td><td><span class="badge bn">Básico</span></td><td style="font-weight:700;">R$149</td><td style="font-size:12px;color:var(--danger);font-weight:600">22/05/2026 · VENCIDO</td><td><span class="badge br">Falhou (3x)</span></td><td><span class="badge br">Suspensa</span></td><td><button class="btn btn-o btn-sm">Gerenciar</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card" style="padding:18px;">
+              <h3 style="font-size:13px;font-weight:700;margin-bottom:4px;">Feature Flags Globais <span class="tag-new">novo</span></h3>
+              <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">Flags globais se aplicam a todas as clínicas. Flags por clínica são gerenciados dentro de cada clínica.</p>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border);">
+                  <div><div style="font-size:12.5px;font-weight:600;">Prontuário Digital</div><div style="font-size:11px;color:var(--text-muted)">Fichas e histórico clínico · Disponível para Pro e Enterprise</div></div>
+                  <div class="toggle on"></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border);">
+                  <div><div style="font-size:12.5px;font-weight:600;">Galeria Antes/Depois</div><div style="font-size:11px;color:var(--text-muted)">Upload e comparação de fotos · Todos os planos</div></div>
+                  <div class="toggle on"></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border);">
+                  <div><div style="font-size:12.5px;font-weight:600;">Módulo de Estoque</div><div style="font-size:11px;color:var(--text-muted)">Gestão de insumos · Apenas Pro e Enterprise</div></div>
+                  <div class="toggle on"></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border);">
+                  <div><div style="font-size:12.5px;font-weight:600;">Comissões Avançadas (escalas)</div><div style="font-size:11px;color:var(--text-muted)">ADMIN-COM-05 · Escalas progressivas · Beta</div></div>
+                  <div class="toggle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Suspensão automática (T1.6): cron job tenta cobrar 3x (dia 1, 3 e 10 após vencimento) — na 3ª falha, suspende e envia e-mail. Você pode suspender ou reativar manualmente em "Gerenciar". Feature flags globais definem o que pode ser ativado por plano; a ativação por clínica individual fica dentro do drill-down de cada clínica.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 7 — SEGURANÇA + LGPD (plataforma global)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">7</div>
+      <div>
+        <div class="section-title">Segurança + LGPD — Global</div>
+        <div class="section-desc">T1.8 · T2.1 · T2.2 · T2.3 · T2.4 · T2.5 — Auditoria, isolamento, consentimentos, direito ao esquecimento, 2FA, restauração</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span class="cur">Segurança / LGPD</span></div>
+            <div class="tb-right"><button class="btn btn-o" style="font-size:11.5px;">↓ Exportar logs</button></div>
+          </div>
+          <div class="pbody">
+            <div class="tabs"><div class="tab on">Trilha de Auditoria</div><div class="tab">LGPD</div><div class="tab">2FA & Sessões</div><div class="tab">Restauração</div></div>
+
+            <div class="g2" style="margin-bottom:16px;">
+              <div class="metric"><div class="m-lbl">Ações hoje</div><div class="m-val">247</div><div class="m-delta up">Normal</div></div>
+              <div class="metric"><div class="m-lbl">Alertas ativos</div><div class="m-val" style="color:var(--danger)">3</div><div class="m-delta down">Requer atenção</div></div>
+              <div class="metric"><div class="m-lbl">Solicitações LGPD</div><div class="m-val">2</div><div class="m-delta">Pendentes</div></div>
+              <div class="metric"><div class="m-lbl">Clínicas em soft-delete</div><div class="m-val">4</div><div class="m-delta">Retenção 90 dias</div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-hd"><div><h3>Trilha de Auditoria</h3><p>Imutável · append-only · filtro por ator, ação e data</p></div><div style="display:flex;gap:8px;"><input class="input" placeholder="Filtrar ação…" style="width:130px;font-size:11.5px;padding:5px 9px;"><button class="btn btn-o btn-sm">Data</button></div></div>
+              <table>
+                <thead><tr><th>Quando</th><th>Ator</th><th>Ação</th><th>Entidade</th><th>IP</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-size:11.5px;color:var(--text-muted)">Hoje · 10:31</td><td><strong style="font-size:12px;">Raphael Z.</strong><br><span style="font-size:10px;color:var(--text-muted)">Super Admin</span></td><td style="font-size:12px;">Acessou dados</td><td><span class="badge bt" style="font-size:10px;">Clínica Aurora</span></td><td style="font-size:11px;color:var(--text-muted)">189.x.x.x</td></tr>
+                  <tr><td style="font-size:11.5px;color:var(--text-muted)">Hoje · 09:18</td><td><strong style="font-size:12px;">Raphael Z.</strong><br><span style="font-size:10px;color:var(--text-muted)">Super Admin</span></td><td style="font-size:12px;">Suspendeu clínica</td><td><span class="badge br" style="font-size:10px;">Face &amp; Form</span></td><td style="font-size:11px;color:var(--text-muted)">189.x.x.x</td></tr>
+                  <tr><td style="font-size:11.5px;color:var(--text-muted)">Ontem · 16:45</td><td><strong style="font-size:12px;">Suporte · Ana</strong><br><span style="font-size:10px;color:var(--text-muted)">Support</span></td><td style="font-size:12px;">Editou feature flag</td><td><span class="badge bt" style="font-size:10px;">Studio Beleza</span></td><td style="font-size:11px;color:var(--text-muted)">177.x.x.x</td></tr>
+                  <tr><td style="font-size:11.5px;color:var(--text-muted)">Ontem · 14:02</td><td><strong style="font-size:12px;">Raphael Z.</strong><br><span style="font-size:10px;color:var(--text-muted)">Super Admin</span></td><td style="font-size:12px;">Exportou relatório</td><td><span class="badge bt" style="font-size:10px;">Rejuvenece BH</span></td><td style="font-size:11px;color:var(--text-muted)">189.x.x.x</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Toda ação sua no sistema — entrar em uma clínica, editar dado, suspender, exportar — gera um registro imutável na auditoria com IP, timestamp e entidade afetada. Isso é fundamental para LGPD: você consegue provar o que foi acessado e quando. Tab "LGPD" lista solicitações de direito ao esquecimento por clínica. Tab "Restauração" (T2.5) lista clínicas canceladas em soft-delete com botão "Restaurar" disponível por 90 dias.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TELA 8 — EQUIPE ADMIN (RBAC interno)
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">8</div>
+      <div>
+        <div class="section-title">Equipe Admin — RBAC Interno</div>
+        <div class="section-desc">T1.7 · T2.4 — Gestão dos seus colaboradores (suporte, analistas) com permissões granulares + 2FA obrigatório</div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="shell">
+        <div class="sidebar" style="opacity:.2;pointer-events:none;"><div class="sb-logo"><div class="sb-wordmark">Lumina<span class="sb-tag">Admin</span></div></div></div>
+        <div class="page">
+          <div class="topbar">
+            <div class="bc"><span>Plataforma</span><span class="sep">›</span><span class="cur">Equipe Admin</span></div>
+            <div class="tb-right"><button class="btn btn-p" style="font-size:11.5px;">+ Convidar membro</button></div>
+          </div>
+          <div class="pbody">
+            <div class="alert a-warn">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v4M8 11h.01"/></svg>
+              <strong>Ana Costa</strong> ainda não configurou o 2FA. Para roles Owner e Super Admin, o 2FA é obrigatório.
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-hd"><div><h3>Membros da Equipe Admin</h3><p>4 membros · você + 3 colaboradores</p></div></div>
+              <table>
+                <thead><tr><th>Membro</th><th>Role Admin</th><th>Permissões</th><th>2FA</th><th>Último Acesso</th><th></th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;">RZ</div><div><strong style="font-size:12.5px;">Raphael Z. (você)</strong><br><span style="font-size:10.5px;color:var(--text-muted)">raphael@lumina.app</span></div></div></td>
+                    <td><span class="badge bp">Owner</span></td>
+                    <td style="font-size:11.5px;color:var(--text-secondary)">Acesso total</td>
+                    <td><span class="badge bg">Ativo</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">Agora</td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;background:var(--primary-dark)">AP</div><div><strong style="font-size:12.5px;">Ana P.</strong><br><span style="font-size:10.5px;color:var(--text-muted)">ana@lumina.app</span></div></div></td>
+                    <td><span class="badge bb">Support</span></td>
+                    <td style="font-size:11.5px;color:var(--text-secondary)">Ver clínicas · feature flags · sem faturamento</td>
+                    <td><span class="badge by">Pendente</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">1 dia</td>
+                    <td><button class="btn btn-o btn-sm">Editar</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:10px;background:#6366f1">LM</div><div><strong style="font-size:12.5px;">Lucas M.</strong><br><span style="font-size:10.5px;color:var(--text-muted)">lucas@lumina.app</span></div></div></td>
+                    <td><span class="badge bt">Analyst</span></td>
+                    <td style="font-size:11.5px;color:var(--text-secondary)">Apenas leitura · relatórios · sem edição</td>
+                    <td><span class="badge bg">Ativo</span></td>
+                    <td style="font-size:11.5px;color:var(--text-muted)">3 dias</td>
+                    <td><button class="btn btn-o btn-sm">Editar</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card" style="padding:18px;">
+              <h3 style="font-size:13px;font-weight:700;margin-bottom:12px;">Roles do Admin (permissões)</h3>
+              <div class="g3">
+                <div style="border-radius:var(--r-sm);padding:12px;border:1px solid var(--border);border-left:3px solid #8b5cf6;">
+                  <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Owner</div>
+                  <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">Tudo · 2FA obrigatório · RBAC · faturamento · exclusão</div>
+                </div>
+                <div style="border-radius:var(--r-sm);padding:12px;border:1px solid var(--border);border-left:3px solid var(--info);">
+                  <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Support</div>
+                  <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">Ver + editar clínicas · feature flags · sem faturamento · sem RBAC</div>
+                </div>
+                <div style="border-radius:var(--r-sm);padding:12px;border:1px solid var(--border);border-left:3px solid var(--primary);">
+                  <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Analyst</div>
+                  <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">Apenas leitura · relatórios · nenhuma escrita · sem dados sensíveis</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">RBAC do admin separa <strong>suas</strong> permissões internas das permissões das clínicas. Um "Support" pode ajudar um cliente a configurar feature flags, mas não vê dados de faturamento. 2FA obrigatório para Owner e Super Admin — ao logar sem 2FA configurado, redireciona para setup com QR Code antes de liberar qualquer acesso.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SEÇÃO 9 — ARQUITETURA DE NAVEGAÇÃO
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-n">9</div>
+      <div>
+        <div class="section-title">Arquitetura de Navegação</div>
+        <div class="section-desc">Mapa completo dos dois níveis · módulos por nível · fluxo de drill-down</div>
+      </div>
+    </div>
+    <div class="frame" style="padding:32px;background:white;">
+
+      <!-- Nível 1 -->
+      <div class="arch-level">
+        <div class="arch-label">Nível 1 — Plataforma Global (sidebar principal)</div>
+        <div class="arch-row">
+          <div class="arch-module"><h4>Dashboard</h4><p>MRR · Churn · Health scores · Alertas de cancelamento · Distribuição de planos</p></div>
+          <div class="arch-module"><h4>Clínicas</h4><p>Lista com busca e filtros · cadastro manual (T1.3) · self-service (T1.4) · health score</p></div>
+          <div class="arch-module"><h4>Faturamento</h4><p>Assinaturas Stripe · upgrade/downgrade (T1.9) · suspensão automática (T1.6) · histórico</p></div>
+          <div class="arch-module"><h4>Feature Flags</h4><p>Flags globais e por clínica (T2.6) · rollout controlado · histórico de alterações</p></div>
+          <div class="arch-module"><h4>Segurança / LGPD</h4><p>Trilha de auditoria (T1.8) · isolamento (T2.1) · LGPD (T2.2, T2.3) · restauração (T2.5)</p></div>
+          <div class="arch-module"><h4>Equipe Admin</h4><p>RBAC interno (T1.7) · Owner / Support / Analyst · 2FA obrigatório (T2.4) · convites</p></div>
+          <div class="arch-module"><h4>Relatórios SaaS</h4><p>Por clínica (T3.2) · feature adoption (T3.4) · alertas churn (T3.3) · agendados (T3.5)</p></div>
+        </div>
+      </div>
+
+      <!-- Nível 2 -->
+      <div class="arch-level" style="border-left-color:var(--info);">
+        <div class="arch-label" style="color:var(--info);">Nível 2 — Dentro de uma clínica (drill-down, sidebar contextual)</div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r-sm);padding:10px 14px;margin-bottom:12px;font-size:11.5px;color:#1e40af;">
+          Acessado via botão "Entrar" na lista de clínicas. A sidebar adiciona o contexto da clínica no topo e um link "← Voltar à plataforma". Você mantém sua identidade de super-admin — não há troca de usuário.
+        </div>
+        <div class="arch-row">
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Equipe</h4><p>ADMIN-USU-01 a 05 · CRUD membros · roles RBAC da clínica · perfil pessoal</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Procedimentos + Pacotes</h4><p>ADMIN-PRO-01 a 05 · CRUD · tabela de preços · combos</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Salas</h4><p>ADMIN-SAL-01 a 04 · CRUD · status disponibilidade em tempo real</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Comissões</h4><p>ADMIN-COM-04/05 · cálculo por profissional · escalas progressivas · relatório</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Relatórios da Clínica</h4><p>ADMIN-REL-01 a 05 · KPIs · captação · saúde · exportação PDF/Excel · agendamento</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Configurações</h4><p>ADMIN-CFG-01/02 · dados · horários de funcionamento</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Segurança da Clínica</h4><p>ADMIN-SEC-02/03 · auditoria da clínica · 2FA dos membros · sessões</p></div>
+          <div class="arch-module" style="background:#eff6ff;border-color:#bfdbfe;"><h4>Faturamento da Clínica</h4><p>Plano · histórico de pagamentos · upgrade/downgrade · cancelamento</p></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="ann">Backup automático diário (T1.10) roda às 00:00 UTC via cron no Supabase. Retenção por plano: Básico = 7 dias, Pro = 30 dias, Enterprise = 90 dias. O modelo de dados multi-tenant usa <code>clinic_id</code> em todas as tabelas com RLS ativo. Seu acesso de super-admin usa <code>service_role</code> com auditoria obrigatória em cada operação.</div>
+  </div>
+
+</div>
+</body>
+</html>
