@@ -1,16 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #587c71;
+  /* Primary palette */
+  --primary:        #587c71;
+  --primary-dark:   #4a685e;
+  --primary-light:  #e8f0ee;
+  --primary-xlight: #f2f7f5;
+
+  /* Sidebar */
+  --sidebar-bg:     #111c18;
+
+  /* Surfaces & Background */
+  --bg:        #edeeed;
+  --surface:   #ffffff;
+  --surface-2: #f7f9f8;
+
+  /* Text */
+  --text-main:      #1a2e26;
+  --text-secondary: #4a5e58;
+  --text-muted:     #8a9e98;
+
+  /* Borders */
+  --border:        #dde8e4;
+  --border-strong: #c5d4cf;
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+  --info:    #3b82f6;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r:    10px;
+  --r-lg: 16px;
+
+  /* Shadows */
+  --shadow:    0 4px 12px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+
+  /* Legacy compat */
   --primary-hover: #4a685e;
-  --bg: #f8f9fa;
-  --card-bg: #ffffff;
-  --text-main: #2c3e35;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --input-bg: #ffffff;
-  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  
   --font-family: 'Inter', sans-serif;
 }
 
@@ -21,13 +51,18 @@
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: 'Inter', sans-serif;
   background-color: var(--bg);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-input, button {
+input, button, select, textarea {
   font-family: inherit;
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
