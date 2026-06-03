@@ -1,8 +1,42 @@
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Mail, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../lib/supabase';
 import './Login.css';
 
-const Login = () => {
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
+
+const Login = ({ onLoginSuccess }: LoginProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err.message || 'Falha ao realizar login. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-container">
       <motion.div 
@@ -19,7 +53,7 @@ const Login = () => {
         
         <h1 className="login-title">Gerenciamento Lumina</h1>
         
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleLogin}>
           <div className="form-group">
             <label className="form-label">E-mail</label>
             <div className="input-wrapper">
@@ -28,7 +62,10 @@ const Login = () => {
                 type="email" 
                 className="login-input" 
                 placeholder="nome@empresa.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -41,7 +78,10 @@ const Login = () => {
                 type="password" 
                 className="login-input" 
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -50,9 +90,22 @@ const Login = () => {
             <a href="#" className="forgot-password-link">Esqueci minha senha</a>
           </div>
           
-          <button type="submit" className="login-button">
-            Acessar Painel
-            <ArrowRight size={20} />
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                className="error-message"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? <Loader2 size={20} className="animate-spin" /> : 'Acessar Painel'}
+            {!loading && <ArrowRight size={20} />}
           </button>
         </form>
       </motion.div>
