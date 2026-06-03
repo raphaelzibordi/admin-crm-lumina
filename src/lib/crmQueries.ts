@@ -1,4 +1,4 @@
-import { crmQuery } from './crmClient';
+import { crmQuery, crmPatch } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -144,6 +144,10 @@ export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agend
     order: 'data.desc',
     limit: 100,
   });
+}
+
+export async function updateClinica(clinicaId: string, updates: { nome_clinica?: string; email?: string }): Promise<void> {
+  await crmPatch('usuarios', clinicaId, updates);
 }
 
 export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinica: string; email: string } | null> {

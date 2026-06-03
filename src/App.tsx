@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 
 // Platform-level pages
 import GlobalDashboard from './pages/GlobalDashboard'
+import Clinicas from './pages/Clinicas'
 import Faturamento from './pages/Faturamento'
 import RelatoriosPlataforma from './pages/RelatoriosPlataforma'
 import FeatureFlags from './pages/FeatureFlags'
@@ -57,7 +58,7 @@ function App() {
       <Routes>
         {/* Platform Level */}
         <Route path="/dashboard"     element={<GlobalDashboard />} />
-        <Route path="/clinicas"      element={<GlobalDashboard />} />
+        <Route path="/clinicas"      element={<Clinicas />} />
         <Route path="/faturamento"   element={<Faturamento />} />
         <Route path="/relatorios"    element={<RelatoriosPlataforma />} />
         <Route path="/feature-flags" element={<FeatureFlags />} />
