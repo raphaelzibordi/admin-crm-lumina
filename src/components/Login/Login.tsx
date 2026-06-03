@@ -1,9 +1,8 @@
-import React from 'react';
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Login.css';
 
-const Login: React.FC = () => {
+const Login = () => {
   return (
     <div className="login-container">
       <motion.div 
