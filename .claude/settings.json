@@ -16,7 +16,8 @@
       "mcp__claude_ai_Supabase__list_tables",
       "Bash(python3 -c ' *)",
       "PowerShell($f = 'C:\\\\Users\\\\rapha\\\\.claude\\\\projects\\\\c--Users-rapha-OneDrive-Documents-GitHub-admin-crm-lumina\\\\26baeace-aaf2-4bab-b72a-05f0e52df151\\\\tool-results\\\\mcp-claude_ai_Supabase-list_tables-1780520958036.txt'; $c = Get-Content $f -Raw; Write-Output \"Total: $\\($c.Length\\)\"; $c.Substring\\(0, 6000\\))",
-      "PowerShell($f = 'C:\\\\Users\\\\rapha\\\\.claude\\\\projects\\\\c--Users-rapha-OneDrive-Documents-GitHub-admin-crm-lumina\\\\26baeace-aaf2-4bab-b72a-05f0e52df151\\\\tool-results\\\\mcp-claude_ai_Supabase-list_tables-1780520958036.txt'; $c = Get-Content $f -Raw; $c.Substring\\(6000, 6000\\))"
+      "PowerShell($f = 'C:\\\\Users\\\\rapha\\\\.claude\\\\projects\\\\c--Users-rapha-OneDrive-Documents-GitHub-admin-crm-lumina\\\\26baeace-aaf2-4bab-b72a-05f0e52df151\\\\tool-results\\\\mcp-claude_ai_Supabase-list_tables-1780520958036.txt'; $c = Get-Content $f -Raw; $c.Substring\\(6000, 6000\\))",
+      "mcp__claude_ai_Supabase__deploy_edge_function"
     ]
   }
 }

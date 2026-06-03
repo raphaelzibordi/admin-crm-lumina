@@ -1,4 +1,4 @@
-import { crm } from './crmClient';
+import { crmQuery } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,7 +11,6 @@ export interface Clinica {
   total_agendamentos: number;
   total_equipe: number;
   receita_total: number;
-  ultima_atividade: string | null;
   health_score: number;
 }
 
@@ -84,96 +83,74 @@ function calcHealth(clientes: number, agendamentos: number, equipe: number, rece
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export async function fetchClinicas(): Promise<Clinica[]> {
-  const { data: donos, error } = await crm
-    .from('usuarios')
-    .select('id, nome_clinica, email, created_at')
-    .eq('role', 'dono')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  if (!donos?.length) return [];
-
-  const ids = donos.map(d => d.id);
-
-  const [clientesRes, agendRes, equipeRes] = await Promise.all([
-    crm.from('clientes').select('user_id').in('user_id', ids),
-    crm.from('agendamentos').select('user_id, valor').in('user_id', ids),
-    crm.from('equipe').select('user_id').in('user_id', ids),
+  const [donos, clientes, agendamentos, equipe] = await Promise.all([
+    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string }>(
+      'usuarios',
+      { select: 'id,nome_clinica,email,created_at', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+    ),
+    crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
+    crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
+    crmQuery<{ user_id: string }>('equipe', { select: 'user_id' }),
   ]);
 
   return donos.map(d => {
-    const clientes = (clientesRes.data || []).filter(c => c.user_id === d.id).length;
-    const ags = (agendRes.data || []).filter(a => a.user_id === d.id);
-    const equipe = (equipeRes.data || []).filter(e => e.user_id === d.id).length;
-    const receita = ags.reduce((sum, a) => sum + (Number(a.valor) || 0), 0);
+    const cli = clientes.filter(c => c.user_id === d.id).length;
+    const ags = agendamentos.filter(a => a.user_id === d.id);
+    const eqp = equipe.filter(e => e.user_id === d.id).length;
+    const receita = ags.reduce((s, a) => s + (Number(a.valor) || 0), 0);
 
     return {
       id: d.id,
       nome_clinica: d.nome_clinica || d.email,
       email: d.email,
       created_at: d.created_at,
-      total_clientes: clientes,
+      total_clientes: cli,
       total_agendamentos: ags.length,
-      total_equipe: equipe,
+      total_equipe: eqp,
       receita_total: receita,
-      ultima_atividade: null,
-      health_score: calcHealth(clientes, ags.length, equipe, receita),
+      health_score: calcHealth(cli, ags.length, eqp, receita),
     };
   });
 }
 
 export async function fetchEquipeClinica(clinicaId: string): Promise<MembroEquipe[]> {
-  const { data, error } = await crm
-    .from('equipe')
-    .select('id, user_id, nome, email, cargo, ativo, created_at')
-    .eq('user_id', clinicaId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  return crmQuery<MembroEquipe>('equipe', {
+    select: 'id,user_id,nome,email,cargo,ativo,created_at',
+    filters: { user_id: `eq.${clinicaId}` },
+    order: 'created_at.desc',
+  });
 }
 
 export async function fetchProcedimentosClinica(clinicaId: string): Promise<Procedimento[]> {
-  const { data, error } = await crm
-    .from('procedimentos')
-    .select('id, user_id, nome, descricao, preco, duracao_minutos, sala_requerida, profissional_responsavel, booking_visivel, created_at')
-    .eq('user_id', clinicaId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  return crmQuery<Procedimento>('procedimentos', {
+    select: 'id,user_id,nome,descricao,preco,duracao_minutos,sala_requerida,profissional_responsavel,booking_visivel,created_at',
+    filters: { user_id: `eq.${clinicaId}` },
+    order: 'created_at.desc',
+  });
 }
 
 export async function fetchSalasClinica(clinicaId: string): Promise<Sala[]> {
-  const { data, error } = await crm
-    .from('salas')
-    .select('id, user_id, nome, descricao, ativo, created_at')
-    .eq('user_id', clinicaId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  return crmQuery<Sala>('salas', {
+    select: 'id,user_id,nome,descricao,ativo,created_at',
+    filters: { user_id: `eq.${clinicaId}` },
+    order: 'created_at.desc',
+  });
 }
 
 export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agendamento[]> {
-  const { data, error } = await crm
-    .from('agendamentos')
-    .select('id, user_id, data, hora_inicio, profissional, procedimento, valor, status, metodo_pagamento, created_at')
-    .eq('user_id', clinicaId)
-    .order('data', { ascending: false })
-    .limit(100);
-
-  if (error) throw error;
-  return data || [];
+  return crmQuery<Agendamento>('agendamentos', {
+    select: 'id,user_id,data,hora_inicio,profissional,procedimento,valor,status,metodo_pagamento,created_at',
+    filters: { user_id: `eq.${clinicaId}` },
+    order: 'data.desc',
+    limit: 100,
+  });
 }
 
 export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinica: string; email: string } | null> {
-  const { data, error } = await crm
-    .from('usuarios')
-    .select('nome_clinica, email')
-    .eq('id', clinicaId)
-    .single();
-
-  if (error) return null;
-  return data;
+  const rows = await crmQuery<{ nome_clinica: string; email: string }>('usuarios', {
+    select: 'nome_clinica,email',
+    filters: { id: `eq.${clinicaId}` },
+    limit: 1,
+  });
+  return rows[0] ?? null;
 }
