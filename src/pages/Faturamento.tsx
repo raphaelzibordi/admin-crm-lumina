@@ -1,22 +1,42 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
-import { Badge, Button, Card, CardHeader, MetricCard, Tabs } from '../components/ui';
+import { Badge, Button, Card, CardHeader, MetricCard, Tabs, HealthBar } from '../components/ui';
+import { fetchClinicas, type Clinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
-const subscriptions = [
-  { name: 'Rejuvenece BH',  plan: 'Enterprise', planV: 'purple' as const, price: 'R$599',  due: '15/06/2026',           payStatus: 'Pago',       payV: 'success' as const, status: 'Ativa',     statusV: 'success' as const },
-  { name: 'Clínica Aurora', plan: 'Pro',         planV: 'info' as const,   price: 'R$299',  due: '18/06/2026',           payStatus: 'Pago',       payV: 'success' as const, status: 'Ativa',     statusV: 'success' as const },
-  { name: 'Studio Beleza',  plan: 'Básico',      planV: 'neutral' as const,price: 'R$149',  due: '02/06/2026 · HOJE',    payStatus: 'Pendente',   payV: 'warning' as const, status: 'Em risco',  statusV: 'warning' as const },
-  { name: 'Face & Form',    plan: 'Básico',      planV: 'neutral' as const,price: 'R$149',  due: '22/05/2026 · VENCIDO', payStatus: 'Falhou (3x)',payV: 'danger'  as const, status: 'Suspensa',  statusV: 'danger'  as const },
-];
+const planFromHealth = (h: number): { label: string; variant: 'purple' | 'info' | 'neutral' } => {
+  if (h >= 80) return { label: 'Enterprise', variant: 'purple' };
+  if (h >= 50) return { label: 'Pro',        variant: 'info'   };
+  return               { label: 'Básico',    variant: 'neutral' };
+};
+
+const priceFromHealth = (h: number) => h >= 80 ? 599 : h >= 50 ? 299 : 149;
+
+const statusFromHealth = (h: number): { label: string; variant: 'success' | 'warning' | 'danger' } => {
+  if (h >= 50) return { label: 'Ativa',    variant: 'success' };
+  if (h >= 30) return { label: 'Em risco', variant: 'warning' };
+  return               { label: 'Crítica', variant: 'danger'  };
+};
 
 const Faturamento = () => {
+  const navigate = useNavigate();
+  const [clinicas, setClinicas] = useState<Clinica[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
 
-  const totalMRR = subscriptions.filter(s => s.status === 'Ativa').reduce((sum, s) => {
-    const val = parseInt(s.price.replace('R$', ''));
-    return sum + (isNaN(val) ? 0 : val);
-  }, 0);
+  useEffect(() => {
+    fetchClinicas()
+      .then(setClinicas)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const ativas   = clinicas.filter(c => c.health_score >= 50).length;
+  const emRisco  = clinicas.filter(c => c.health_score >= 30 && c.health_score < 50).length;
+  const criticas = clinicas.filter(c => c.health_score < 30).length;
+  const mrr      = clinicas.reduce((s, c) => s + priceFromHealth(c.health_score), 0);
 
   const topbarRight = (
     <Button variant="outline" size="sm">Sincronizar Stripe</Button>
@@ -25,47 +45,72 @@ const Faturamento = () => {
   return (
     <AppShell topbarRight={topbarRight}>
       <div className="metrics" style={{ marginBottom: 16 }}>
-        <MetricCard label="MRR"              value={`R$${totalMRR.toLocaleString('pt-BR')}`} delta="Receita mensal recorrente" deltaType="up" />
-        <MetricCard label="Assinaturas Ativas" value={String(subscriptions.filter(s => s.status === 'Ativa').length)} delta="de 4 clínicas" deltaType="up" />
-        <MetricCard label="Em Risco"         value={String(subscriptions.filter(s => s.status === 'Em risco').length)} delta="Vence hoje" deltaType="down" />
-        <MetricCard label="Suspensas"        value={String(subscriptions.filter(s => s.status === 'Suspensa').length)} delta="Cobrança falhou" deltaType="down" />
+        <MetricCard label="MRR Estimado"      value={`R$${mrr.toLocaleString('pt-BR')}`}  delta="Receita mensal recorrente" deltaType="up" />
+        <MetricCard label="Assinaturas Ativas" value={String(ativas)}                       delta={`de ${clinicas.length} clínicas`} deltaType="up" />
+        <MetricCard label="Em Risco"           value={String(emRisco)}                      delta="Health entre 30–49"  deltaType={emRisco  > 0 ? 'down' : 'up'} />
+        <MetricCard label="Críticas"           value={String(criticas)}                     delta="Health abaixo de 30" deltaType={criticas > 0 ? 'down' : 'up'} />
       </div>
 
-      <Tabs
-        tabs={['Assinaturas', 'Histórico']}
-        active={tab}
-        onChange={setTab}
-      />
+      <Tabs tabs={['Assinaturas', 'Histórico']} active={tab} onChange={setTab} />
 
       {tab === 0 && (
         <Card>
-          <CardHeader title="Assinaturas Ativas" subtitle="124 clínicas · ordenado por vencimento" />
-          <table>
-            <thead>
-              <tr>
-                <th>Clínica</th>
-                <th>Plano</th>
-                <th>Valor/mês</th>
-                <th>Vencimento</th>
-                <th>Pagamento</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {subscriptions.map((s, i) => (
-                <tr key={i}>
-                  <td><strong>{s.name}</strong></td>
-                  <td><Badge variant={s.planV}>{s.plan}</Badge></td>
-                  <td><strong>{s.price}</strong></td>
-                  <td style={{ fontSize: 12, color: s.due.includes('VENCIDO') ? 'var(--danger)' : s.due.includes('HOJE') ? 'var(--warning)' : 'var(--text-secondary)', fontWeight: s.due.includes('VENCIDO') || s.due.includes('HOJE') ? 600 : 400 }}>{s.due}</td>
-                  <td><Badge variant={s.payV}>{s.payStatus}</Badge></td>
-                  <td><Badge variant={s.statusV}>{s.status}</Badge></td>
-                  <td><Button variant="outline" size="sm">Gerenciar</Button></td>
+          <CardHeader
+            title="Assinaturas"
+            subtitle={loading ? 'Carregando…' : `${clinicas.length} clínicas · ordenado por health score`}
+            action={<Button variant="outline" size="sm">↓ Exportar</Button>}
+          />
+          {loading ? (
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              Carregando clínicas…
+            </div>
+          ) : error ? (
+            <div className="alert a-danger" style={{ margin: 16 }}>{error}</div>
+          ) : clinicas.length === 0 ? (
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              Nenhuma clínica encontrada.
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Clínica</th>
+                  <th>Plano</th>
+                  <th>Valor/mês</th>
+                  <th>Agendamentos</th>
+                  <th>Health</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {[...clinicas].sort((a, b) => b.health_score - a.health_score).map(c => {
+                  const plan   = planFromHealth(c.health_score);
+                  const status = statusFromHealth(c.health_score);
+                  const price  = priceFromHealth(c.health_score);
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <strong style={{ fontSize: 12.5 }}>{c.nome_clinica}</strong>
+                        <br />
+                        <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{c.email}</span>
+                      </td>
+                      <td><Badge variant={plan.variant}>{plan.label}</Badge></td>
+                      <td><strong>R${price}</strong></td>
+                      <td style={{ fontSize: 12 }}>{c.total_agendamentos}</td>
+                      <td><HealthBar value={c.health_score} /></td>
+                      <td><Badge variant={status.variant}>{status.label}</Badge></td>
+                      <td>
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/clinicas/${c.id}/faturamento`)}>
+                          Gerenciar
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Card>
       )}
 
@@ -73,30 +118,36 @@ const Faturamento = () => {
         <Card style={{ padding: 18 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Histórico de Cobranças</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-            Registros de todas as cobranças processadas via Stripe.
+            Registros de cobranças processadas via Stripe. Integração de webhook em andamento.
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Clínica</th>
-                <th>Valor</th>
-                <th>Vencimento</th>
-                <th>Pagamento</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subscriptions.map((s, i) => (
-                <tr key={i}>
-                  <td><strong>{s.name}</strong></td>
-                  <td><strong>{s.price}</strong></td>
-                  <td style={{ fontSize: 12, color: s.due.includes('VENCIDO') ? 'var(--danger)' : s.due.includes('HOJE') ? 'var(--warning)' : 'var(--text-secondary)', fontWeight: s.due.includes('VENCIDO') || s.due.includes('HOJE') ? 600 : 400 }}>{s.due}</td>
-                  <td><Badge variant={s.payV}>{s.payStatus}</Badge></td>
-                  <td><Badge variant={s.statusV}>{s.status}</Badge></td>
+          {loading ? (
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Carregando…</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Clínica</th>
+                  <th>Valor</th>
+                  <th>Agendamentos</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {[...clinicas].sort((a, b) => b.health_score - a.health_score).map(c => {
+                  const status = statusFromHealth(c.health_score);
+                  const price  = priceFromHealth(c.health_score);
+                  return (
+                    <tr key={c.id}>
+                      <td><strong>{c.nome_clinica}</strong></td>
+                      <td><strong>R${price}</strong></td>
+                      <td style={{ fontSize: 12 }}>{c.total_agendamentos} agendamentos</td>
+                      <td><Badge variant={status.variant}>{status.label}</Badge></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Card>
       )}
     </AppShell>
