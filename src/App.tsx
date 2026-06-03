@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react'
 // Platform-level pages
 import GlobalDashboard from './pages/GlobalDashboard'
 import Faturamento from './pages/Faturamento'
+import RelatoriosPlataforma from './pages/RelatoriosPlataforma'
+import FeatureFlags from './pages/FeatureFlags'
 import Seguranca from './pages/Seguranca'
 import EquipeAdmin from './pages/EquipeAdmin'
 
@@ -16,6 +18,10 @@ import EquipeClinica from './pages/clinica/EquipeClinica'
 import ProcedimentosClinica from './pages/clinica/ProcedimentosClinica'
 import SalasClinica from './pages/clinica/SalasClinica'
 import RelatoriosClinica from './pages/clinica/RelatoriosClinica'
+import AgendaClinica from './pages/clinica/AgendaClinica'
+import FaturamentoClinica from './pages/clinica/FaturamentoClinica'
+import SegurancaClinica from './pages/clinica/SegurancaClinica'
+import ConfiguracoesClinica from './pages/clinica/ConfiguracoesClinica'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -50,20 +56,24 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Platform Level */}
-        <Route path="/dashboard"    element={<GlobalDashboard />} />
-        <Route path="/clinicas"     element={<GlobalDashboard />} />
-        <Route path="/faturamento"  element={<Faturamento />} />
-        <Route path="/relatorios"   element={<Faturamento />} />
-        <Route path="/feature-flags" element={<Faturamento />} />
-        <Route path="/seguranca"    element={<Seguranca />} />
-        <Route path="/equipe-admin" element={<EquipeAdmin />} />
+        <Route path="/dashboard"     element={<GlobalDashboard />} />
+        <Route path="/clinicas"      element={<GlobalDashboard />} />
+        <Route path="/faturamento"   element={<Faturamento />} />
+        <Route path="/relatorios"    element={<RelatoriosPlataforma />} />
+        <Route path="/feature-flags" element={<FeatureFlags />} />
+        <Route path="/seguranca"     element={<Seguranca />} />
+        <Route path="/equipe-admin"  element={<EquipeAdmin />} />
 
         {/* Clinic Drill-down Level */}
         <Route path="/clinicas/:clinicId/equipe"        element={<EquipeClinica />} />
         <Route path="/clinicas/:clinicId/procedimentos" element={<ProcedimentosClinica />} />
         <Route path="/clinicas/:clinicId/salas"         element={<SalasClinica />} />
+        <Route path="/clinicas/:clinicId/agenda"        element={<AgendaClinica />} />
         <Route path="/clinicas/:clinicId/relatorios"    element={<RelatoriosClinica />} />
         <Route path="/clinicas/:clinicId/comissoes"     element={<RelatoriosClinica />} />
+        <Route path="/clinicas/:clinicId/faturamento"   element={<FaturamentoClinica />} />
+        <Route path="/clinicas/:clinicId/seguranca"     element={<SegurancaClinica />} />
+        <Route path="/clinicas/:clinicId/configuracoes" element={<ConfiguracoesClinica />} />
         <Route path="/clinicas/:clinicId/*"             element={<EquipeClinica />} />
 
         {/* Default */}

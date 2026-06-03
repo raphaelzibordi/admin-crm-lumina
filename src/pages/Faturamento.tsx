@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AppShell from '../components/layout/AppShell';
-import { Badge, Button, Card, CardHeader, Tabs, Toggle } from '../components/ui';
+import { Badge, Button, Card, CardHeader, MetricCard, Tabs } from '../components/ui';
 import '../components/ui/ui.css';
 
 const subscriptions = [
@@ -10,16 +10,13 @@ const subscriptions = [
   { name: 'Face & Form',    plan: 'Básico',      planV: 'neutral' as const,price: 'R$149',  due: '22/05/2026 · VENCIDO', payStatus: 'Falhou (3x)',payV: 'danger'  as const, status: 'Suspensa',  statusV: 'danger'  as const },
 ];
 
-const globalFlags = [
-  { name: 'Prontuário Digital',        desc: 'Fichas e histórico clínico · Disponível para Pro e Enterprise', on: true  },
-  { name: 'Galeria Antes/Depois',      desc: 'Upload e comparação de fotos · Todos os planos',                on: true  },
-  { name: 'Módulo de Estoque',         desc: 'Gestão de insumos · Apenas Pro e Enterprise',                   on: true  },
-  { name: 'Comissões Avançadas (escalas)', desc: 'ADMIN-COM-05 · Escalas progressivas · Beta',               on: false },
-];
-
 const Faturamento = () => {
   const [tab, setTab] = useState(0);
-  const [flags, setFlags] = useState(globalFlags);
+
+  const totalMRR = subscriptions.filter(s => s.status === 'Ativa').reduce((sum, s) => {
+    const val = parseInt(s.price.replace('R$', ''));
+    return sum + (isNaN(val) ? 0 : val);
+  }, 0);
 
   const topbarRight = (
     <Button variant="outline" size="sm">Sincronizar Stripe</Button>
@@ -27,8 +24,15 @@ const Faturamento = () => {
 
   return (
     <AppShell topbarRight={topbarRight}>
+      <div className="metrics" style={{ marginBottom: 16 }}>
+        <MetricCard label="MRR"              value={`R$${totalMRR.toLocaleString('pt-BR')}`} delta="Receita mensal recorrente" deltaType="up" />
+        <MetricCard label="Assinaturas Ativas" value={String(subscriptions.filter(s => s.status === 'Ativa').length)} delta="de 4 clínicas" deltaType="up" />
+        <MetricCard label="Em Risco"         value={String(subscriptions.filter(s => s.status === 'Em risco').length)} delta="Vence hoje" deltaType="down" />
+        <MetricCard label="Suspensas"        value={String(subscriptions.filter(s => s.status === 'Suspensa').length)} delta="Cobrança falhou" deltaType="down" />
+      </div>
+
       <Tabs
-        tabs={['Assinaturas', 'Feature Flags', 'Histórico']}
+        tabs={['Assinaturas', 'Histórico']}
         active={tab}
         onChange={setTab}
       />
@@ -67,30 +71,32 @@ const Faturamento = () => {
 
       {tab === 1 && (
         <Card style={{ padding: 18 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-            Feature Flags Globais{' '}
-            <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, background: '#f59e0b', color: 'white', padding: '1px 5px', borderRadius: 3, marginLeft: 5, textTransform: 'uppercase' }}>novo</span>
-          </h3>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14 }}>
-            Flags globais se aplicam a todas as clínicas. Flags por clínica são gerenciados dentro de cada clínica.
+          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Histórico de Cobranças</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+            Registros de todas as cobranças processadas via Stripe.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {flags.map((f, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 600 }}>{f.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{f.desc}</div>
-                </div>
-                <Toggle on={f.on} onChange={(v) => setFlags(flags.map((fl, j) => j === i ? { ...fl, on: v } : fl))} />
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {tab === 2 && (
-        <Card style={{ padding: 18 }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Histórico de pagamentos será exibido aqui.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Clínica</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Pagamento</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subscriptions.map((s, i) => (
+                <tr key={i}>
+                  <td><strong>{s.name}</strong></td>
+                  <td><strong>{s.price}</strong></td>
+                  <td style={{ fontSize: 12, color: s.due.includes('VENCIDO') ? 'var(--danger)' : s.due.includes('HOJE') ? 'var(--warning)' : 'var(--text-secondary)', fontWeight: s.due.includes('VENCIDO') || s.due.includes('HOJE') ? 600 : 400 }}>{s.due}</td>
+                  <td><Badge variant={s.payV}>{s.payStatus}</Badge></td>
+                  <td><Badge variant={s.statusV}>{s.status}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Card>
       )}
     </AppShell>
