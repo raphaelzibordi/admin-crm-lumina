@@ -2,10 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, type Clinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
+
+const PLANOS: { value: PlanoClinica; label: string; badge: 'neutral' | 'info' | 'purple' }[] = [
+  { value: 'basico',     label: 'Básico',     badge: 'neutral' },
+  { value: 'pro',        label: 'Pro',        badge: 'info'    },
+  { value: 'enterprise', label: 'Enterprise', badge: 'purple'  },
+];
 
 function getStatus(score: number): { label: string; variant: 'success' | 'warning' | 'danger' } {
   if (score >= 60) return { label: 'Ativa', variant: 'success' };
@@ -73,6 +79,7 @@ const Clinicas = () => {
   const [selected, setSelected] = useState<Clinica | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editPlano, setEditPlano] = useState<PlanoClinica>('basico');
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -97,6 +104,7 @@ const Clinicas = () => {
     setSelected(c);
     setEditName(c.nome_clinica);
     setEditEmail(c.email);
+    setEditPlano(c.plano);
     setSaveResult(null);
   };
 
@@ -107,11 +115,11 @@ const Clinicas = () => {
     setSaving(true);
     setSaveResult(null);
     try {
-      await updateClinica(selected.id, { nome_clinica: editName, email: editEmail });
+      await updateClinica(selected.id, { nome_clinica: editName, email: editEmail, plano: editPlano });
       setClinicas(prev => prev.map(c =>
-        c.id === selected.id ? { ...c, nome_clinica: editName, email: editEmail } : c
+        c.id === selected.id ? { ...c, nome_clinica: editName, email: editEmail, plano: editPlano } : c
       ));
-      setSelected(prev => prev ? { ...prev, nome_clinica: editName, email: editEmail } : null);
+      setSelected(prev => prev ? { ...prev, nome_clinica: editName, email: editEmail, plano: editPlano } : null);
       setSaveResult({ ok: true, msg: 'Alterações salvas com sucesso.' });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -221,8 +229,11 @@ const Clinicas = () => {
                 </div>
 
                 {/* Health + Status */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <HealthBar value={c.health_score} />
+                  <Badge variant={PLANOS.find(p => p.value === c.plano)?.badge ?? 'neutral'}>
+                    {PLANOS.find(p => p.value === c.plano)?.label ?? c.plano}
+                  </Badge>
                   <Badge variant={status.variant}>{status.label}</Badge>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
                     stroke="var(--text-muted)" strokeWidth="1.8"
@@ -341,6 +352,34 @@ const Clinicas = () => {
                 />
               </label>
 
+              <label style={{ display: 'block', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                  {PLANOS.map(p => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setEditPlano(p.value)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        border: `2px solid ${editPlano === p.value ? 'var(--primary)' : 'var(--border)'}`,
+                        borderRadius: 'var(--r-sm)',
+                        background: editPlano === p.value ? 'var(--primary-light)' : 'var(--surface)',
+                        color: editPlano === p.value ? 'var(--primary-dark)' : 'var(--text-secondary)',
+                        fontSize: 12.5,
+                        fontWeight: editPlano === p.value ? 700 : 500,
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </label>
+
               <label style={{ display: 'block', marginBottom: 20 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Cadastro</span>
                 <div style={{
@@ -371,7 +410,7 @@ const Clinicas = () => {
                 variant="primary"
                 size="sm"
                 onClick={handleSave}
-                disabled={saving || (editName === selected.nome_clinica && editEmail === selected.email)}
+                disabled={saving || (editName === selected.nome_clinica && editEmail === selected.email && editPlano === selected.plano)}
               >
                 {saving ? 'Salvando…' : 'Salvar alterações'}
               </Button>

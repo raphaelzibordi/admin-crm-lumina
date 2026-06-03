@@ -2,11 +2,14 @@ import { crmQuery, crmPatch } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export type PlanoClinica = 'basico' | 'pro' | 'enterprise';
+
 export interface Clinica {
   id: string;
   nome_clinica: string;
   email: string;
   created_at: string;
+  plano: PlanoClinica;
   total_clientes: number;
   total_agendamentos: number;
   total_equipe: number;
@@ -84,9 +87,9 @@ function calcHealth(clientes: number, agendamentos: number, equipe: number, rece
 
 export async function fetchClinicas(): Promise<Clinica[]> {
   const [donos, clientes, agendamentos, equipe] = await Promise.all([
-    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string }>(
+    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica }>(
       'usuarios',
-      { select: 'id,nome_clinica,email,created_at', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+      { select: 'id,nome_clinica,email,created_at,plano', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
     ),
     crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
     crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
@@ -104,6 +107,7 @@ export async function fetchClinicas(): Promise<Clinica[]> {
       nome_clinica: d.nome_clinica || d.email,
       email: d.email,
       created_at: d.created_at,
+      plano: d.plano ?? 'basico',
       total_clientes: cli,
       total_agendamentos: ags.length,
       total_equipe: eqp,
@@ -146,7 +150,7 @@ export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agend
   });
 }
 
-export async function updateClinica(clinicaId: string, updates: { nome_clinica?: string; email?: string }): Promise<void> {
+export async function updateClinica(clinicaId: string, updates: { nome_clinica?: string; email?: string; plano?: PlanoClinica }): Promise<void> {
   await crmPatch('usuarios', clinicaId, updates);
 }
 
