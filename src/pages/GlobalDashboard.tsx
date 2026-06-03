@@ -1,27 +1,30 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
-import { Badge, Button, MetricCard, Card, CardHeader, Alert, HealthBar, MiniBarChart, ProgressBar } from '../components/ui';
+import { Badge, Button, MetricCard, Card, CardHeader, HealthBar, ProgressBar } from '../components/ui';
+import { fetchClinicas, type Clinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
-
-const clinics = [
-  { id: '1', name: 'Clínica Aurora',  city: 'São Paulo · SP',      plan: 'Pro',        planVariant: 'info' as const,   health: 88, status: 'Ativa',     statusVariant: 'success' as const },
-  { id: '2', name: 'Rejuvenece BH',   city: 'Belo Horizonte · MG', plan: 'Enterprise', planVariant: 'purple' as const, health: 97, status: 'Ativa',     statusVariant: 'success' as const },
-  { id: '3', name: 'Studio Beleza',   city: 'Campinas · SP',       plan: 'Básico',     planVariant: 'neutral' as const,health: 52, status: 'Em risco',  statusVariant: 'warning' as const },
-  { id: '4', name: 'Face & Form',     city: 'Rio de Janeiro · RJ', plan: 'Básico',     planVariant: 'neutral' as const,health: 18, status: 'Em risco',  statusVariant: 'danger' as const  },
-  { id: '5', name: 'Espaço Zen',      city: 'Curitiba · PR',       plan: 'Pro',        planVariant: 'info' as const,   health: 91, status: 'Ativa',     statusVariant: 'success' as const },
-];
 
 const GlobalDashboard = () => {
   const navigate = useNavigate();
+  const [clinicas, setClinicas] = useState<Clinica[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchClinicas()
+      .then(setClinicas)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalReceita = clinicas.reduce((s, c) => s + c.receita_total, 0);
+  const totalClientes = clinicas.reduce((s, c) => s + c.total_clientes, 0);
+  const totalAgendamentos = clinicas.reduce((s, c) => s + c.total_agendamentos, 0);
+  const emRisco = clinicas.filter(c => c.health_score < 40).length;
 
   const topbarRight = (
     <>
-      <button className="ib" style={{ position: 'relative' }}>
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M8 2a5 5 0 0 0-5 5v2.5L1.5 11h13L13 9.5V7a5 5 0 0 0-5-5zM6.5 13.5a1.5 1.5 0 0 0 3 0"/>
-        </svg>
-        <div style={{ position: 'absolute', top: 5, right: 5, width: 6, height: 6, background: 'var(--danger)', borderRadius: '50%', border: '1.5px solid white' }}/>
-      </button>
       <Button variant="outline" size="sm">Exportar</Button>
       <Button variant="primary" size="sm">+ Nova Clínica</Button>
     </>
@@ -29,110 +32,117 @@ const GlobalDashboard = () => {
 
   return (
     <AppShell topbarRight={topbarRight}>
-      <Alert variant="danger">
-        <strong>3 clínicas em risco de cancelamento</strong> — Inativas há 14+ dias sem acesso.{' '}
-        <span style={{ textDecoration: 'underline', cursor: 'pointer', marginLeft: 4 }}>Ver detalhes →</span>
-      </Alert>
+      {error && (
+        <div className="alert a-danger" style={{ marginBottom: 14 }}>
+          Erro ao carregar dados do CRM: {error}
+        </div>
+      )}
 
       <div className="metrics">
-        <MetricCard label="MRR Total"      value="R$47.3k" delta="↑ 8.2% vs mês anterior" deltaType="up" />
-        <MetricCard label="Clínicas Ativas" value="124"    delta="↑ +6 novas este mês"     deltaType="up" />
-        <MetricCard label="Churn Rate"      value="2.1%"   delta="↑ +0.4pp vs mês anterior" deltaType="down" />
-        <MetricCard label="Em Risco"        value="3"      delta="Requer ação imediata"     deltaType="down" />
+        <MetricCard label="Receita Total"       value={`R$${(totalReceita / 100).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`} delta="Soma de todos agendamentos" deltaType="up" />
+        <MetricCard label="Clínicas Ativas"     value={String(clinicas.length)} delta={`${clinicas.length} cadastradas`} deltaType="up" />
+        <MetricCard label="Total Clientes"      value={String(totalClientes)} delta="Todos os pacientes" deltaType="up" />
+        <MetricCard label="Em Risco"            value={String(emRisco)} delta={emRisco > 0 ? 'Health < 40' : 'Todas saudáveis'} deltaType={emRisco > 0 ? 'down' : 'up'} />
       </div>
 
       <div className="g2">
-        {/* Clinics table */}
         <Card>
           <CardHeader
             title="Clínicas · Health Score"
-            subtitle="124 ativas · ordenado por risco"
+            subtitle={`${clinicas.length} cadastradas · ordenado por risco`}
             action={<Button variant="outline" size="sm">Ver todas</Button>}
           />
-          <table>
-            <thead>
-              <tr>
-                <th>Clínica</th>
-                <th>Plano</th>
-                <th>Health</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {clinics.map(c => (
-                <tr key={c.id}>
-                  <td>
-                    <strong>{c.name}</strong>
-                    <br />
-                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{c.city}</span>
-                  </td>
-                  <td><Badge variant={c.planVariant}>{c.plan}</Badge></td>
-                  <td><HealthBar value={c.health} /></td>
-                  <td><Badge variant={c.statusVariant}>{c.status}</Badge></td>
-                  <td>
-                    <Button
-                      variant="outline" size="sm"
-                      onClick={() => navigate(`/clinicas/${c.id}/equipe`)}
-                    >
-                      Entrar
-                    </Button>
-                  </td>
+          {loading ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              Carregando clínicas…
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Clínica</th>
+                  <th>Clientes</th>
+                  <th>Agendamentos</th>
+                  <th>Receita</th>
+                  <th>Health</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {clinicas.map(c => {
+                  const statusVariant = c.health_score >= 60 ? 'success' as const : c.health_score >= 35 ? 'warning' as const : 'danger' as const;
+                  const statusLabel = c.health_score >= 60 ? 'Ativa' : c.health_score >= 35 ? 'Em risco' : 'Crítica';
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <strong>{c.nome_clinica}</strong>
+                        <br />
+                        <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{c.email}</span>
+                      </td>
+                      <td style={{ fontSize: 12 }}>{c.total_clientes}</td>
+                      <td style={{ fontSize: 12 }}>{c.total_agendamentos}</td>
+                      <td style={{ fontSize: 12.5, fontWeight: 700 }}>
+                        R${Number(c.receita_total).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                      </td>
+                      <td><HealthBar value={c.health_score} /></td>
+                      <td><Badge variant={statusVariant}>{statusLabel}</Badge></td>
+                      <td>
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/clinicas/${c.id}/equipe`)}>
+                          Entrar
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Card>
 
-        {/* Right column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* MRR Chart */}
           <Card style={{ padding: 18 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>MRR · Últimos 6 meses</h3>
-            <MiniBarChart
-              data={[40, 50, 62, 72, 85, 100]}
-              labels={['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']}
-              activeIndex={5}
-            />
-            <div className="divider" />
-            <div className="g2">
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Novas assinaturas</div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>+R$3.8k</div>
+            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Distribuição de Agendamentos</h3>
+            {clinicas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {clinicas.map(c => {
+                  const pct = totalAgendamentos > 0 ? Math.round((c.total_agendamentos / totalAgendamentos) * 100) : 0;
+                  return (
+                    <div key={c.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>{c.nome_clinica}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.total_agendamentos} agend. · {pct}%</span>
+                      </div>
+                      <ProgressBar value={pct} />
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Cancelamentos</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--danger)' }}>−R$0.9k</div>
-              </div>
-            </div>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sem dados</div>
+            )}
           </Card>
 
-          {/* Plan distribution */}
           <Card style={{ padding: 18 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Distribuição de Planos</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Básico</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>68 clínicas · 55%</span>
-                </div>
-                <ProgressBar value={55} color="#8a9e98" />
+            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Distribuição de Clientes</h3>
+            {clinicas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {clinicas.map(c => {
+                  const pct = totalClientes > 0 ? Math.round((c.total_clientes / totalClientes) * 100) : 0;
+                  return (
+                    <div key={c.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>{c.nome_clinica}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.total_clientes} clientes · {pct}%</span>
+                      </div>
+                      <ProgressBar value={pct} />
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Pro</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>48 clínicas · 39%</span>
-                </div>
-                <ProgressBar value={39} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Enterprise</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>8 clínicas · 6%</span>
-                </div>
-                <ProgressBar value={6} color="#8b5cf6" />
-              </div>
-            </div>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sem dados</div>
+            )}
           </Card>
         </div>
       </div>

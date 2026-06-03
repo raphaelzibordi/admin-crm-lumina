@@ -5,7 +5,18 @@
       "Bash(npm run *)",
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__execute_sql",
-      "mcp__claude_ai_Supabase__get_publishable_keys"
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "Bash(curl -s http://localhost:5173)",
+      "mcp__claude_ai_Supabase__get_logs",
+      "Bash(curl -s -X POST https://vbyogqenwggwtrlokkhg.supabase.co/auth/v1/token?grant_type=password -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZieW9ncWVud2dnd3RybG9ra2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0OTk2ODAsImV4cCI6MjA5NjA3NTY4MH0.zeR3WQza4esS4vOefGJ15VBTeVBFRcMse8fyVMz0VPU' -H 'Content-Type: application/json' -d '{\"email\":\"raphaelzibordi@gmail.com\",\"password\":\"Barradas&1996\"}')",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(python3 -c ' *)",
+      "PowerShell($f = 'C:\\\\Users\\\\rapha\\\\.claude\\\\projects\\\\c--Users-rapha-OneDrive-Documents-GitHub-admin-crm-lumina\\\\26baeace-aaf2-4bab-b72a-05f0e52df151\\\\tool-results\\\\mcp-claude_ai_Supabase-list_tables-1780520958036.txt'; $c = Get-Content $f -Raw; Write-Output \"Total: $\\($c.Length\\)\"; $c.Substring\\(0, 6000\\))",
+      "PowerShell($f = 'C:\\\\Users\\\\rapha\\\\.claude\\\\projects\\\\c--Users-rapha-OneDrive-Documents-GitHub-admin-crm-lumina\\\\26baeace-aaf2-4bab-b72a-05f0e52df151\\\\tool-results\\\\mcp-claude_ai_Supabase-list_tables-1780520958036.txt'; $c = Get-Content $f -Raw; $c.Substring\\(6000, 6000\\))"
     ]
   }
 }

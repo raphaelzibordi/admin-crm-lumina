@@ -1,25 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { Badge, Button, Card, CardHeader, Alert } from '../../components/ui';
+import { fetchEquipeClinica, type MembroEquipe } from '../../lib/crmQueries';
 import '../../components/ui/ui.css';
 
-const members = [
-  { initials: 'CM', name: 'Carla Mendes',  role: 'Médica',         roleV: 'purple' as const, specialty: 'Dermatologista',       status: 'Ativa',    statusV: 'success' as const, commission: '35%', lastAccess: 'Hoje',   twoFA: 'Ativo',    twoFAV: 'success' as const },
-  { initials: 'JP', name: 'João Pedro',    role: 'Técnico',        roleV: 'info'   as const, specialty: 'Estética Avançada',    status: 'Ativo',    statusV: 'success' as const, commission: '25%', lastAccess: 'Ontem',  twoFA: 'Pendente', twoFAV: 'warning' as const },
-  { initials: 'MR', name: 'Maria Rosa',    role: 'Recepcionista',  roleV: 'teal'   as const, specialty: 'Atendimento ao Cliente',status: 'Ativa',    statusV: 'success' as const, commission: '—',   lastAccess: 'Hoje',   twoFA: 'Ativo',    twoFAV: 'success' as const },
-  { initials: 'FS', name: 'Felipe Santos', role: 'Admin Clínica',  roleV: 'neutral' as const,specialty: 'Gestão',               status: 'Ativo',    statusV: 'success' as const, commission: '—',   lastAccess: '2 dias', twoFA: 'Ativo',    twoFAV: 'success' as const },
-  { initials: 'LC', name: 'Lara Costa',    role: 'Esteticista',    roleV: 'teal'   as const, specialty: 'Peeling · Botox',      status: 'Férias',   statusV: 'warning' as const, commission: '30%', lastAccess: '8 dias', twoFA: 'Pendente', twoFAV: 'warning' as const },
-];
-
-const roles = [
-  { role: 'Admin Clínica', color: '#8b5cf6', desc: 'Gestão total da clínica · configurações · faturamento · RBAC interno' },
-  { role: 'Médico / Profissional', color: 'var(--info)', desc: 'Acesso à agenda · prontuários · procedimentos · comissões próprias' },
-  { role: 'Técnico / Esteticista', color: 'var(--primary)', desc: 'Execução de procedimentos · registros · sem acesso financeiro' },
-  { role: 'Recepcionista', color: 'var(--text-muted)', desc: 'Agendamentos · atendimento · sem dados financeiros ou clínicos' },
-];
-
 const EquipeClinica = () => {
-  const [activeTab, setActiveTab] = useState<'membros' | 'roles'>('membros');
+  const { clinicId } = useParams<{ clinicId: string }>();
+  const [membros, setMembros] = useState<MembroEquipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clinicId) return;
+    fetchEquipeClinica(clinicId)
+      .then(setMembros)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [clinicId]);
+
+  const inativos = membros.filter(m => !m.ativo).length;
 
   const topbarRight = (
     <Button variant="primary" size="sm">+ Convidar membro</Button>
@@ -27,71 +27,73 @@ const EquipeClinica = () => {
 
   return (
     <AppShell topbarRight={topbarRight}>
-      <Alert variant="warning">
-        <strong>João Pedro</strong> e <strong>Lara Costa</strong> ainda não ativaram o 2FA. Considere restringir acesso até a configuração.
-      </Alert>
+      {inativos > 0 && (
+        <Alert variant="warning">
+          <strong>{inativos} membro(s)</strong> com status inativo nesta clínica.
+        </Alert>
+      )}
 
-      <div className="tabs" style={{ marginBottom: 16 }}>
-        <button className={`tab ${activeTab === 'membros' ? 'on' : ''}`} onClick={() => setActiveTab('membros')}>Membros</button>
-        <button className={`tab ${activeTab === 'roles' ? 'on' : ''}`} onClick={() => setActiveTab('roles')}>Roles & Permissões</button>
-      </div>
-
-      {activeTab === 'membros' && (
-        <Card>
-          <CardHeader
-            title="Equipe da Clínica"
-            subtitle={`${members.length} membros ativos`}
-            action={<Button variant="outline" size="sm">Exportar</Button>}
-          />
+      <Card>
+        <CardHeader
+          title="Equipe da Clínica"
+          subtitle={loading ? 'Carregando…' : `${membros.length} membros cadastrados`}
+          action={<Button variant="outline" size="sm">Exportar</Button>}
+        />
+        {loading ? (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            Carregando equipe…
+          </div>
+        ) : error ? (
+          <div className="alert a-danger" style={{ margin: 16 }}>{error}</div>
+        ) : membros.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            Nenhum membro cadastrado nesta clínica.
+          </div>
+        ) : (
           <table>
             <thead>
               <tr>
                 <th>Membro</th>
-                <th>Role</th>
-                <th>Especialidade</th>
-                <th>Comissão</th>
-                <th>2FA</th>
+                <th>Cargo</th>
+                <th>E-mail</th>
                 <th>Status</th>
-                <th>Último Acesso</th>
+                <th>Desde</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {members.map((m, i) => (
-                <tr key={i}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                      <div className="avatar" style={{ width: 30, height: 30, fontSize: 10 }}>{m.initials}</div>
-                      <strong style={{ fontSize: 12.5 }}>{m.name}</strong>
-                    </div>
-                  </td>
-                  <td><Badge variant={m.roleV}>{m.role}</Badge></td>
-                  <td style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{m.specialty}</td>
-                  <td style={{ fontSize: 12, fontWeight: 600 }}>{m.commission}</td>
-                  <td><Badge variant={m.twoFAV}>{m.twoFA}</Badge></td>
-                  <td><Badge variant={m.statusV}>{m.status}</Badge></td>
-                  <td style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{m.lastAccess}</td>
-                  <td><Button variant="outline" size="sm">Editar</Button></td>
-                </tr>
-              ))}
+              {membros.map(m => {
+                const initials = m.nome
+                  ? m.nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                  : m.email.slice(0, 2).toUpperCase();
+                return (
+                  <tr key={m.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                        <div className="avatar" style={{ width: 30, height: 30, fontSize: 10 }}>{initials}</div>
+                        <strong style={{ fontSize: 12.5 }}>{m.nome || '—'}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <Badge variant="info">{m.cargo || 'Não definido'}</Badge>
+                    </td>
+                    <td style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{m.email || '—'}</td>
+                    <td>
+                      <Badge variant={m.ativo ? 'success' : 'neutral'}>
+                        {m.ativo ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </td>
+                    <td style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                      {new Date(m.created_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td><Button variant="outline" size="sm">Ver</Button></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </Card>
-      )}
-
-      {activeTab === 'roles' && (
-        <Card style={{ padding: 18 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Roles da Clínica (RBAC Interno)</h3>
-          <div className="g2">
-            {roles.map((r) => (
-              <div key={r.role} style={{ borderRadius: 'var(--r-sm)', padding: 14, border: '1px solid var(--border)', borderLeft: `3px solid ${r.color}` }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>{r.role}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>{r.desc}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+        )}
+      </Card>
     </AppShell>
   );
 };
