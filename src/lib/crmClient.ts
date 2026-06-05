@@ -5,10 +5,6 @@ const ANON_KEY  = import.meta.env.VITE_CRM_ANON_KEY  as string;
 
 if (!QUERY_URL || !ANON_KEY) throw new Error('Missing CRM Edge Function env vars');
 
-// Derive the REST API base from the edge function URL
-// e.g. https://<ref>.supabase.co/functions/v1/crm-query → https://<ref>.supabase.co
-const CRM_REST_BASE = QUERY_URL.replace(/\/functions\/v1\/.*$/, '/rest/v1');
-
 interface QueryOptions {
   select?: string;
   filters?: Record<string, string>;

@@ -1,4 +1,4 @@
-import { crmQuery, crmPatch, crmPost } from './crmClient';
+import { crmQuery, crmPatch } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
