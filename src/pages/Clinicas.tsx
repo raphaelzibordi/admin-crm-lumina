@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, type Clinica, type PlanoClinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
@@ -69,6 +69,29 @@ const fieldStyle: React.CSSProperties = {
   marginTop: 4,
 };
 
+function exportCSV(clinicas: Clinica[]) {
+  const headers = ['Nome', 'Email', 'Plano', 'Clientes', 'Agendamentos', 'Equipe', 'Receita', 'Health Score', 'Status'];
+  const rows = clinicas.map(c => [
+    `"${c.nome_clinica.replace(/"/g, '""')}"`,
+    c.email,
+    c.plano,
+    c.total_clientes,
+    c.total_agendamentos,
+    c.total_equipe,
+    c.receita_total,
+    c.health_score,
+    c.health_score >= 60 ? 'Ativa' : c.health_score >= 35 ? 'Em risco' : 'Crítica',
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `clinicas-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const Clinicas = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,13 +108,45 @@ const Clinicas = () => {
   const [editPlano, setEditPlano] = useState<PlanoClinica>('basico');
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  useEffect(() => {
+  const [showModal, setShowModal] = useState(false);
+  const [newNome, setNewNome] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPlano, setNewPlano] = useState<PlanoClinica>('basico');
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const loadClinicas = () => {
+    setLoading(true);
     fetchClinicas()
       .then(setClinicas)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadClinicas(); }, []);
+
+  const openModal = () => {
+    setNewNome(''); setNewEmail(''); setNewPlano('basico'); setCreateError(null);
+    setShowModal(true);
+  };
+
+  const handleCreate = async () => {
+    if (!newNome.trim() || !newEmail.trim()) { setCreateError('Preencha todos os campos.'); return; }
+    setCreating(true); setCreateError(null);
+    try {
+      await createClinica({ nome_clinica: newNome.trim(), email: newEmail.trim(), plano: newPlano });
+      setShowModal(false);
+      loadClinicas();
+    } catch (e: unknown) {
+      setCreateError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const filtered = clinicas.filter(c => {
     const q = search.toLowerCase();
@@ -109,9 +164,39 @@ const Clinicas = () => {
     setEditEmail(c.email);
     setEditPlano(c.plano);
     setSaveResult(null);
+    setConfirmDelete(false);
   };
 
-  const closePanel = () => setSelected(null);
+  const closePanel = () => { setSelected(null); setConfirmDelete(false); };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    setDeleting(true);
+    try {
+      await deleteClinica(selected.id);
+      setSelected(null);
+      setConfirmDelete(false);
+      loadClinicas();
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleResendInvite = async () => {
+    if (!selected) return;
+    setResending(true);
+    setSaveResult(null);
+    try {
+      await resendInvite(selected.email, selected.nome_clinica);
+      setSaveResult({ ok: true, msg: 'Convite reenviado com sucesso.' });
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!selected) return;
@@ -134,8 +219,8 @@ const Clinicas = () => {
 
   const topbarRight = (
     <>
-      <Button variant="outline" size="sm">Exportar</Button>
-      <Button variant="primary" size="sm">+ Nova Clínica</Button>
+      <Button variant="outline" size="sm" onClick={() => exportCSV(filtered)} disabled={filtered.length === 0}>Exportar</Button>
+      <Button variant="primary" size="sm" onClick={openModal}>+ Nova Clínica</Button>
     </>
   );
 
@@ -248,6 +333,73 @@ const Clinicas = () => {
             );
           })}
         </div>
+      )}
+
+      {/* ── Nova Clínica modal ──────────────────────────────────────── */}
+      {showModal && (
+        <>
+          <div
+            onClick={() => setShowModal(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 200 }}
+          />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 420, background: 'var(--surface)',
+            border: '1px solid var(--border)', borderRadius: 'var(--r)',
+            zIndex: 201, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: 'var(--text-main)' }}>Nova Clínica</div>
+              <button onClick={() => setShowModal(false)} style={{
+                width: 28, height: 28, border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
+                background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3l10 10M13 3L3 13" />
+                </svg>
+              </button>
+            </div>
+            <div style={{ padding: 20 }}>
+              <label style={{ display: 'block', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Nome da clínica</span>
+                <input type="text" value={newNome} onChange={e => setNewNome(e.target.value)} style={fieldStyle} placeholder="Ex: Clínica São Paulo" autoFocus />
+              </label>
+              <label style={{ display: 'block', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>E-mail</span>
+                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} style={fieldStyle} placeholder="contato@clinica.com.br" />
+              </label>
+              <label style={{ display: 'block', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
+              </label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                {PLANOS.map(p => (
+                  <button key={p.value} type="button" onClick={() => setNewPlano(p.value)} style={{
+                    flex: 1, padding: '8px 0',
+                    border: `2px solid ${newPlano === p.value ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 'var(--r-sm)',
+                    background: newPlano === p.value ? 'var(--primary-light)' : 'var(--surface)',
+                    color: newPlano === p.value ? 'var(--primary-dark)' : 'var(--text-secondary)',
+                    fontSize: 12.5, fontWeight: newPlano === p.value ? 700 : 500,
+                    cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
+                  }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              {createError && (
+                <div className="alert a-danger" style={{ marginBottom: 14 }}>{createError}</div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button variant="primary" size="sm" onClick={handleCreate} disabled={creating}>
+                  {creating ? 'Criando…' : 'Criar clínica'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowModal(false)}>Cancelar</Button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Detail / edit panel ─────────────────────────────────────── */}
@@ -394,38 +546,50 @@ const Clinicas = () => {
                 </div>
               </label>
 
-              {/* Save feedback */}
+              {/* Save / action feedback */}
               {saveResult && (
                 <div className={`alert ${saveResult.ok ? 'a-info' : 'a-danger'}`} style={{ marginBottom: 14 }}>
                   {saveResult.msg}
                 </div>
               )}
+
+              {/* Confirm delete zone */}
+              {confirmDelete && (
+                <div style={{ background: 'var(--danger-light, #fef2f2)', border: '1px solid var(--danger, #e05252)', borderRadius: 'var(--r-sm)', padding: '14px 16px', marginTop: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger, #e05252)', marginBottom: 6 }}>
+                    Excluir clínica permanentemente?
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.5 }}>
+                    Isso remove o acesso do dono, todos os dados vinculados e o usuário do sistema. <strong>Irreversível.</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button variant="primary" size="sm" onClick={handleDelete} disabled={deleting}
+                      style={{ background: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+                      {deleting ? 'Excluindo…' : 'Confirmar exclusão'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Panel footer */}
-            <div style={{
-              padding: '14px 20px',
-              borderTop: '1px solid var(--border)',
-              display: 'flex',
-              gap: 8,
-            }}>
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSave}
+                variant="primary" size="sm" onClick={handleSave}
                 disabled={saving || (editName === selected.nome_clinica && editEmail === selected.email && editPlano === selected.plano)}
               >
                 {saving ? 'Salvando…' : 'Salvar alterações'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/clinicas/${selected.id}/equipe`)}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigate(`/clinicas/${selected.id}/equipe`)}>
                 Entrar na clínica
               </Button>
-              <Button variant="outline" size="sm" onClick={closePanel} style={{ marginLeft: 'auto' }}>
-                Fechar
+              <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resending}>
+                {resending ? 'Enviando…' : 'Reenviar convite'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmDelete(true); }}
+                style={{ marginLeft: 'auto', color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+                Excluir clínica
               </Button>
             </div>
           </div>

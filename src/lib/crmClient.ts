@@ -44,18 +44,37 @@ export async function crmQuery<T>(table: string, opts: QueryOptions = {}): Promi
 }
 
 export async function crmPatch(table: string, id: string, updates: Record<string, unknown>): Promise<void> {
-  const res = await fetch(`${CRM_REST_BASE}/${table}?id=eq.${id}`, {
-    method: 'PATCH',
+  const res = await fetch(QUERY_URL, {
+    method: 'POST',
     headers: {
       'apikey': ANON_KEY,
       'Authorization': `Bearer ${ANON_KEY}`,
       'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
     },
-    body: JSON.stringify(updates),
+    body: JSON.stringify({ action: 'patch', table, id, updates }),
   });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`CRM update failed [${table}]: ${res.status} ${body}`);
   }
+  const json = await res.json();
+  if (json?.error) throw new Error(`CRM update error [${table}]: ${json.error}`);
+}
+
+export async function crmPost(table: string, data: Record<string, unknown>): Promise<void> {
+  const res = await fetch(QUERY_URL, {
+    method: 'POST',
+    headers: {
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'insert', table, data }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`CRM insert failed [${table}]: ${res.status} ${body}`);
+  }
+  const json = await res.json();
+  if (json?.error) throw new Error(`CRM insert error [${table}]: ${json.error}`);
 }

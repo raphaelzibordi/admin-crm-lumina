@@ -1,4 +1,4 @@
-import { crmQuery, crmPatch } from './crmClient';
+import { crmQuery, crmPatch, crmPost } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +15,21 @@ export interface Clinica {
   total_equipe: number;
   receita_total: number;
   health_score: number;
+}
+
+export interface ClinicaConfig {
+  nome_clinica: string;
+  email: string;
+  telefone: string | null;
+  cnpj: string | null;
+  site: string | null;
+  nome: string | null;
+  cpf: string | null;
+  cep: string | null;
+  rua: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
 }
 
 export interface MembroEquipe {
@@ -154,6 +169,57 @@ export async function updateClinica(clinicaId: string, updates: { nome_clinica?:
   await crmPatch('usuarios', clinicaId, updates);
 }
 
+export async function deleteClinica(id: string): Promise<void> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'delete-clinica', id }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+}
+
+export async function resendInvite(email: string, nome_clinica: string): Promise<void> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'resend-invite', email, nome_clinica }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+}
+
+export async function createClinica(data: { nome_clinica: string; email: string; plano: PlanoClinica }): Promise<void> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'create-clinica', data }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+}
+
 export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinica: string; email: string } | null> {
   const rows = await crmQuery<{ nome_clinica: string; email: string }>('usuarios', {
     select: 'nome_clinica,email',
@@ -161,4 +227,17 @@ export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinic
     limit: 1,
   });
   return rows[0] ?? null;
+}
+
+export async function fetchClinicaConfig(clinicaId: string): Promise<ClinicaConfig | null> {
+  const rows = await crmQuery<ClinicaConfig>('usuarios', {
+    select: 'nome_clinica,email,telefone,cnpj,site,nome,cpf,cep,rua,bairro,cidade,estado',
+    filters: { id: `eq.${clinicaId}` },
+    limit: 1,
+  });
+  return rows[0] ?? null;
+}
+
+export async function updateClinicaConfig(clinicaId: string, updates: Partial<ClinicaConfig>): Promise<void> {
+  await crmPatch('usuarios', clinicaId, updates as Record<string, unknown>);
 }
