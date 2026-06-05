@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
 import { fetchClinicas, updateClinica, type Clinica, type PlanoClinica } from '../lib/crmQueries';
@@ -71,11 +71,14 @@ const fieldStyle: React.CSSProperties = {
 
 const Clinicas = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [clinicas, setClinicas] = useState<Clinica[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+    (location.state as { statusFilter?: StatusFilter } | null)?.statusFilter ?? 'all'
+  );
   const [selected, setSelected] = useState<Clinica | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');

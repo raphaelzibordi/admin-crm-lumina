@@ -38,6 +38,24 @@ const GlobalDashboard = () => {
         </div>
       )}
 
+      {!loading && emRisco > 0 && (
+        <div className="alert a-danger" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="8" cy="8" r="6" /><path d="M8 5v4M8 11h.01" />
+          </svg>
+          <span>
+            <strong>{emRisco} {emRisco === 1 ? 'clínica em risco' : 'clínicas em risco'} de cancelamento</strong>
+            {' '}— Health score crítico.{' '}
+            <span
+              onClick={() => navigate('/clinicas', { state: { statusFilter: 'critica' } })}
+              style={{ textDecoration: 'underline', cursor: 'pointer', marginLeft: 4 }}
+            >
+              Ver detalhes →
+            </span>
+          </span>
+        </div>
+      )}
+
       <div className="metrics">
         <MetricCard label="Receita Total"       value={`R$${(totalReceita / 100).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`} delta="Soma de todos agendamentos" deltaType="up" />
         <MetricCard label="Clínicas Ativas"     value={String(clinicas.length)} delta={`${clinicas.length} cadastradas`} deltaType="up" />
