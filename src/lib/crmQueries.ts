@@ -1,4 +1,4 @@
-import { crmQuery, crmPatch } from './crmClient';
+import { crmQuery, crmPatch, crmPost, crmDelete } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -61,6 +61,7 @@ export interface Sala {
   nome: string;
   descricao: string | null;
   ativo: boolean;
+  profissional_id: string | null;
   created_at: string;
 }
 
@@ -150,10 +151,34 @@ export async function fetchProcedimentosClinica(clinicaId: string): Promise<Proc
 
 export async function fetchSalasClinica(clinicaId: string): Promise<Sala[]> {
   return crmQuery<Sala>('salas', {
-    select: 'id,user_id,nome,descricao,ativo,created_at',
+    select: 'id,user_id,nome,descricao,ativo,profissional_id,created_at',
     filters: { user_id: `eq.${clinicaId}` },
     order: 'created_at.desc',
   });
+}
+
+export async function createSala(
+  clinicaId: string,
+  data: { nome: string; descricao?: string | null; ativo?: boolean },
+): Promise<void> {
+  await crmPost('salas', {
+    user_id: clinicaId,
+    nome: data.nome,
+    descricao: data.descricao ?? null,
+    ativo: data.ativo ?? true,
+    profissional_id: null,
+  });
+}
+
+export async function updateSala(
+  salaId: string,
+  updates: Partial<{ nome: string; descricao: string | null; ativo: boolean; profissional_id: string | null }>,
+): Promise<void> {
+  await crmPatch('salas', salaId, updates as Record<string, unknown>);
+}
+
+export async function deleteSala(salaId: string): Promise<void> {
+  await crmDelete('salas', salaId);
 }
 
 export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agendamento[]> {

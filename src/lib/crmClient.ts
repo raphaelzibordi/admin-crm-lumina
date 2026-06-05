@@ -74,3 +74,21 @@ export async function crmPost(table: string, data: Record<string, unknown>): Pro
   const json = await res.json();
   if (json?.error) throw new Error(`CRM insert error [${table}]: ${json.error}`);
 }
+
+export async function crmDelete(table: string, id: string): Promise<void> {
+  const res = await fetch(QUERY_URL, {
+    method: 'POST',
+    headers: {
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'delete', table, id }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`CRM delete failed [${table}]: ${res.status} ${body}`);
+  }
+  const json = await res.json();
+  if (json?.error) throw new Error(`CRM delete error [${table}]: ${json.error}`);
+}
