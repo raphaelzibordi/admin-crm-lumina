@@ -15,6 +15,9 @@ export interface Clinica {
   total_equipe: number;
   receita_total: number;
   health_score: number;
+  stripe_subscription_status: string | null;
+  plano_periodicidade: string | null;
+  acesso_expira_em: string | null;
 }
 
 export interface ClinicaConfig {
@@ -103,9 +106,9 @@ function calcHealth(clientes: number, agendamentos: number, equipe: number, rece
 
 export async function fetchClinicas(): Promise<Clinica[]> {
   const [donos, clientes, agendamentos, equipe] = await Promise.all([
-    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica }>(
+    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; stripe_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null }>(
       'usuarios',
-      { select: 'id,nome_clinica,email,created_at,plano', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+      { select: 'id,nome_clinica,email,created_at,plano,stripe_subscription_status,plano_periodicidade,acesso_expira_em', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
     ),
     crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
     crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
@@ -129,6 +132,9 @@ export async function fetchClinicas(): Promise<Clinica[]> {
       total_equipe: eqp,
       receita_total: receita,
       health_score: calcHealth(cli, ags.length, eqp, receita),
+      stripe_subscription_status: d.stripe_subscription_status ?? null,
+      plano_periodicidade: d.plano_periodicidade ?? null,
+      acesso_expira_em: d.acesso_expira_em ?? null,
     };
   });
 }
@@ -192,6 +198,23 @@ export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agend
 
 export async function updateClinica(clinicaId: string, updates: { nome_clinica?: string; email?: string; plano?: PlanoClinica }): Promise<void> {
   await crmPatch('usuarios', clinicaId, updates);
+}
+
+export async function adminChangePlan(clinicaId: string, plano: PlanoClinica): Promise<void> {
+  const res = await fetch(
+    import.meta.env.VITE_CRM_QUERY_URL as string,
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'admin-change-plan', id: clinicaId, plano }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
 }
 
 export async function deleteClinica(id: string): Promise<void> {

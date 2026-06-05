@@ -2,10 +2,29 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, adminChangePlan, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
+
+const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
+  trialing: { label: 'Trial',        variant: 'info'    },
+  active:   { label: 'Ativo',        variant: 'success' },
+  past_due: { label: 'Inadimplente', variant: 'danger'  },
+  canceled: { label: 'Cancelado',    variant: 'neutral' },
+};
+
+function billingInfo(c: Clinica) {
+  if (!c.stripe_subscription_status) return null;
+  return BILLING_STATUS[c.stripe_subscription_status] ?? { label: c.stripe_subscription_status, variant: 'neutral' as const };
+}
+
+function trialDaysLeft(iso: string | null): number | null {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / 86_400_000);
+}
 
 const PLANOS: { value: PlanoClinica; label: string; badge: 'neutral' | 'info' | 'purple' }[] = [
   { value: 'basico',     label: 'Básico',     badge: 'neutral' },
@@ -203,7 +222,10 @@ const Clinicas = () => {
     setSaving(true);
     setSaveResult(null);
     try {
-      await updateClinica(selected.id, { nome_clinica: editName, email: editEmail, plano: editPlano });
+      await updateClinica(selected.id, { nome_clinica: editName, email: editEmail });
+      if (editPlano !== selected.plano) {
+        await adminChangePlan(selected.id, editPlano);
+      }
       setClinicas(prev => prev.map(c =>
         c.id === selected.id ? { ...c, nome_clinica: editName, email: editEmail, plano: editPlano } : c
       ));
@@ -323,6 +345,9 @@ const Clinicas = () => {
                     {PLANOS.find(p => p.value === c.plano)?.label ?? c.plano}
                   </Badge>
                   <Badge variant={status.variant}>{status.label}</Badge>
+                  {billingInfo(c) && (
+                    <Badge variant={billingInfo(c)!.variant}>{billingInfo(c)!.label}</Badge>
+                  )}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
                     stroke="var(--text-muted)" strokeWidth="1.8"
                     style={{ flexShrink: 0 }}>
@@ -479,6 +504,39 @@ const Clinicas = () => {
                 </div>
                 <HealthBar value={selected.health_score} />
               </div>
+
+              <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
+
+              {/* Billing status */}
+              {selected.stripe_subscription_status && (() => {
+                const info = billingInfo(selected);
+                const days = selected.stripe_subscription_status === 'trialing'
+                  ? trialDaysLeft(selected.acesso_expira_em)
+                  : null;
+                return (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--text-muted)', marginBottom: 10 }}>
+                      Billing
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      {info && <Badge variant={info.variant}>{info.label}</Badge>}
+                      <Badge variant="neutral">
+                        {selected.plano_periodicidade === 'anual' ? 'Anual' : 'Mensal'}
+                      </Badge>
+                      {days !== null && (
+                        <span style={{ fontSize: 11.5, color: days <= 7 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                          {days === 0 ? 'Trial expirado' : `Trial: ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}`}
+                        </span>
+                      )}
+                      {selected.acesso_expira_em && selected.stripe_subscription_status !== 'trialing' && (
+                        <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                          Expira {new Date(selected.acesso_expira_em).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
 
