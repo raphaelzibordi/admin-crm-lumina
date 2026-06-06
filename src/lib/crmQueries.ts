@@ -18,6 +18,7 @@ export interface Clinica {
   abacatepay_subscription_status: string | null;
   plano_periodicidade: string | null;
   acesso_expira_em: string | null;
+  suspended_at: string | null;
 }
 
 export interface ClinicaConfig {
@@ -106,9 +107,9 @@ function calcHealth(clientes: number, agendamentos: number, equipe: number, rece
 
 export async function fetchClinicas(): Promise<Clinica[]> {
   const [donos, clientes, agendamentos, equipe] = await Promise.all([
-    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; abacatepay_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null }>(
+    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; abacatepay_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null; suspended_at: string | null }>(
       'usuarios',
-      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em,suspended_at', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
     ),
     crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
     crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
@@ -135,6 +136,7 @@ export async function fetchClinicas(): Promise<Clinica[]> {
       abacatepay_subscription_status: d.abacatepay_subscription_status ?? null,
       plano_periodicidade: d.plano_periodicidade ?? null,
       acesso_expira_em: d.acesso_expira_em ?? null,
+      suspended_at: d.suspended_at ?? null,
     };
   });
 }

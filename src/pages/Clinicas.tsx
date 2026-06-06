@@ -8,9 +8,11 @@ import '../components/ui/ui.css';
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
 
 const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
-  pending:  { label: 'Aguardando ativação', variant: 'info'    },
-  active:   { label: 'Ativo',               variant: 'success' },
-  canceled: { label: 'Cancelado',           variant: 'neutral' },
+  pending:   { label: 'Aguardando ativação', variant: 'info'    },
+  active:    { label: 'Ativo',               variant: 'success' },
+  past_due:  { label: 'Inadimplente',        variant: 'warning' },
+  suspended: { label: 'Suspenso',            variant: 'danger'  },
+  canceled:  { label: 'Cancelado',           variant: 'neutral' },
 };
 
 function billingInfo(c: Clinica) {
@@ -533,6 +535,16 @@ const Clinicas = () => {
                         </span>
                       )}
                     </div>
+                    {selected.abacatepay_subscription_status === 'suspended' && selected.suspended_at && (
+                      <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--danger)' }}>
+                        Acesso suspenso em {new Date(selected.suspended_at).toLocaleDateString('pt-BR')} após 3 tentativas de cobrança sem sucesso. O acesso é restaurado automaticamente quando o pagamento for confirmado.
+                      </div>
+                    )}
+                    {selected.abacatepay_subscription_status === 'past_due' && (
+                      <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--warning)' }}>
+                        Pagamento em atraso — o sistema tentará cobrar novamente automaticamente. Após 3 tentativas sem sucesso, o acesso será suspenso.
+                      </div>
+                    )}
                   </div>
                 );
               })()}
