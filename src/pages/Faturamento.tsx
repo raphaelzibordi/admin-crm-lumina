@@ -39,7 +39,7 @@ const Faturamento = () => {
   const mrr      = clinicas.reduce((s, c) => s + priceFromHealth(c.health_score), 0);
 
   const topbarRight = (
-    <Button variant="outline" size="sm">Sincronizar Stripe</Button>
+    <Button variant="outline" size="sm">Sincronizar AbacatePay</Button>
   );
 
   return (
@@ -118,7 +118,7 @@ const Faturamento = () => {
         <Card style={{ padding: 18 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Histórico de Cobranças</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-            Registros de cobranças processadas via Stripe. Integração de webhook em andamento.
+            Registros de cobranças processadas via AbacatePay. Integração de webhook em andamento.
           </p>
           {loading ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Carregando…</div>

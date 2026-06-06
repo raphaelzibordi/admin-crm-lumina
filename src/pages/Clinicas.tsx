@@ -8,15 +8,14 @@ import '../components/ui/ui.css';
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
 
 const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
-  trialing: { label: 'Trial',        variant: 'info'    },
-  active:   { label: 'Ativo',        variant: 'success' },
-  past_due: { label: 'Inadimplente', variant: 'danger'  },
-  canceled: { label: 'Cancelado',    variant: 'neutral' },
+  pending:  { label: 'Aguardando ativação', variant: 'info'    },
+  active:   { label: 'Ativo',               variant: 'success' },
+  canceled: { label: 'Cancelado',           variant: 'neutral' },
 };
 
 function billingInfo(c: Clinica) {
-  if (!c.stripe_subscription_status) return null;
-  return BILLING_STATUS[c.stripe_subscription_status] ?? { label: c.stripe_subscription_status, variant: 'neutral' as const };
+  if (!c.abacatepay_subscription_status) return null;
+  return BILLING_STATUS[c.abacatepay_subscription_status] ?? { label: c.abacatepay_subscription_status, variant: 'neutral' as const };
 }
 
 function trialDaysLeft(iso: string | null): number | null {
@@ -508,9 +507,9 @@ const Clinicas = () => {
               <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
 
               {/* Billing status */}
-              {selected.stripe_subscription_status && (() => {
+              {selected.abacatepay_subscription_status && (() => {
                 const info = billingInfo(selected);
-                const days = selected.stripe_subscription_status === 'trialing'
+                const days = selected.abacatepay_subscription_status === 'pending'
                   ? trialDaysLeft(selected.acesso_expira_em)
                   : null;
                 return (
@@ -525,10 +524,10 @@ const Clinicas = () => {
                       </Badge>
                       {days !== null && (
                         <span style={{ fontSize: 11.5, color: days <= 7 ? 'var(--danger)' : 'var(--text-muted)' }}>
-                          {days === 0 ? 'Trial expirado' : `Trial: ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}`}
+                          {days === 0 ? 'Acesso expirado' : `Acesso: ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}`}
                         </span>
                       )}
-                      {selected.acesso_expira_em && selected.stripe_subscription_status !== 'trialing' && (
+                      {selected.acesso_expira_em && selected.abacatepay_subscription_status === 'active' && (
                         <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
                           Expira {new Date(selected.acesso_expira_em).toLocaleDateString('pt-BR')}
                         </span>

@@ -359,7 +359,7 @@ const ConfiguracoesClinica = () => {
           {[
             { nome: 'Google Calendar', desc: 'Sincronizar agendamentos com o Google Calendar', conectado: true  },
             { nome: 'WhatsApp Business', desc: 'Enviar notificações e lembretes pelo WhatsApp', conectado: true  },
-            { nome: 'Stripe', desc: 'Processar pagamentos e assinaturas online',               conectado: false },
+            { nome: 'AbacatePay', desc: 'Processar pagamentos e assinaturas online',           conectado: false },
             { nome: 'Prontuário Digital', desc: 'Integração com sistema de prontuário eletrônico', conectado: false },
           ].map((integ, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'var(--surface)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
