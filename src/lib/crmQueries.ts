@@ -2,7 +2,7 @@ import { crmQuery, crmPatch, crmPost, crmDelete } from './crmClient';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type PlanoClinica = 'basico' | 'pro' | 'enterprise';
+export type PlanoClinica = 'basico' | 'pro' | 'enterprise' | 'vip';
 
 export interface Clinica {
   id: string;
@@ -19,6 +19,7 @@ export interface Clinica {
   plano_periodicidade: string | null;
   acesso_expira_em: string | null;
   suspended_at: string | null;
+  admin_suspended: boolean;
 }
 
 export interface ClinicaConfig {
@@ -107,9 +108,9 @@ function calcHealth(clientes: number, agendamentos: number, equipe: number, rece
 
 export async function fetchClinicas(): Promise<Clinica[]> {
   const [donos, clientes, agendamentos, equipe] = await Promise.all([
-    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; abacatepay_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null; suspended_at: string | null }>(
+    crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; abacatepay_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null; suspended_at: string | null; admin_suspended: boolean }>(
       'usuarios',
-      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em,suspended_at', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em,suspended_at,admin_suspended', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
     ),
     crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
     crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
@@ -137,8 +138,43 @@ export async function fetchClinicas(): Promise<Clinica[]> {
       plano_periodicidade: d.plano_periodicidade ?? null,
       acesso_expira_em: d.acesso_expira_em ?? null,
       suspended_at: d.suspended_at ?? null,
+      admin_suspended: d.admin_suspended ?? false,
     };
   });
+}
+
+export async function adminSuspendClinica(clinicaId: string): Promise<void> {
+  const res = await fetch(
+    import.meta.env.VITE_CRM_QUERY_URL as string,
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'admin-suspend-clinica', id: clinicaId }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+}
+
+export async function adminReactivateClinica(clinicaId: string): Promise<void> {
+  const res = await fetch(
+    import.meta.env.VITE_CRM_QUERY_URL as string,
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'admin-reactivate-clinica', id: clinicaId }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
 }
 
 export async function fetchEquipeClinica(clinicaId: string): Promise<MembroEquipe[]> {

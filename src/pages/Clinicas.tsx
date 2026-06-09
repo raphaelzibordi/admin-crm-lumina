@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, adminChangePlan, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, adminChangePlan, adminSuspendClinica, adminReactivateClinica, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
@@ -14,6 +14,7 @@ const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warn
   suspended: { label: 'Suspenso',            variant: 'danger'  },
   canceled:  { label: 'Cancelado',           variant: 'neutral' },
 };
+
 
 function billingInfo(c: Clinica) {
   if (!c.abacatepay_subscription_status) return null;
@@ -31,6 +32,7 @@ const PLANOS: { value: PlanoClinica; label: string; badge: 'neutral' | 'info' | 
   { value: 'basico',     label: 'Básico',     badge: 'neutral' },
   { value: 'pro',        label: 'Pro',        badge: 'info'    },
   { value: 'enterprise', label: 'Enterprise', badge: 'purple'  },
+  { value: 'vip',        label: 'VIP',        badge: 'purple'  },
 ];
 
 function getStatus(score: number): { label: string; variant: 'success' | 'warning' | 'danger' } {
@@ -131,6 +133,8 @@ const Clinicas = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [resending, setResending] = useState(false);
+  const [suspending, setSuspending] = useState(false);
+  const [confirmSuspend, setConfirmSuspend] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [newNome, setNewNome] = useState('');
@@ -185,9 +189,43 @@ const Clinicas = () => {
     setEditPlano(c.plano);
     setSaveResult(null);
     setConfirmDelete(false);
+    setConfirmSuspend(false);
   };
 
-  const closePanel = () => { setSelected(null); setConfirmDelete(false); };
+  const closePanel = () => { setSelected(null); setConfirmDelete(false); setConfirmSuspend(false); };
+
+  const handleSuspend = async () => {
+    if (!selected) return;
+    setSuspending(true);
+    try {
+      await adminSuspendClinica(selected.id);
+      const updated = { ...selected, admin_suspended: true };
+      setClinicas(prev => prev.map(c => c.id === selected.id ? updated : c));
+      setSelected(updated);
+      setConfirmSuspend(false);
+      setSaveResult({ ok: true, msg: 'Clínica suspensa com sucesso.' });
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSuspending(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    if (!selected) return;
+    setSuspending(true);
+    try {
+      await adminReactivateClinica(selected.id);
+      const updated = { ...selected, admin_suspended: false };
+      setClinicas(prev => prev.map(c => c.id === selected.id ? updated : c));
+      setSelected(updated);
+      setSaveResult({ ok: true, msg: 'Clínica reativada com sucesso.' });
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSuspending(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!selected) return;
@@ -345,8 +383,11 @@ const Clinicas = () => {
                   <Badge variant={PLANOS.find(p => p.value === c.plano)?.badge ?? 'neutral'}>
                     {PLANOS.find(p => p.value === c.plano)?.label ?? c.plano}
                   </Badge>
-                  <Badge variant={status.variant}>{status.label}</Badge>
-                  {billingInfo(c) && (
+                  {c.admin_suspended
+                    ? <Badge variant="danger">Suspensa</Badge>
+                    : <Badge variant={status.variant}>{status.label}</Badge>
+                  }
+                  {!c.admin_suspended && billingInfo(c) && (
                     <Badge variant={billingInfo(c)!.variant}>{billingInfo(c)!.label}</Badge>
                   )}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
@@ -535,12 +576,22 @@ const Clinicas = () => {
                         </span>
                       )}
                     </div>
-                    {selected.abacatepay_subscription_status === 'suspended' && selected.suspended_at && (
+                    {selected.admin_suspended && (
+                      <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--danger, #e05252)', background: 'var(--danger-light, #fef2f2)', border: '1px solid var(--danger, #e05252)', borderRadius: 6, padding: '8px 10px' }}>
+                        ⛔ Clínica suspensa manualmente pelo administrador. O acesso ao sistema está bloqueado.
+                      </div>
+                    )}
+                    {selected.plano === 'vip' && !selected.admin_suspended && (
+                      <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--purple, #7c3aed)', background: 'var(--purple-light, #f3eeff)', border: '1px solid var(--purple-border, #c4b5fd)', borderRadius: 6, padding: '8px 10px' }}>
+                        ✦ Parceiro VIP — acesso gratuito e sem cobrança. Nenhuma ação de billing se aplica.
+                      </div>
+                    )}
+                    {selected.abacatepay_subscription_status === 'suspended' && !selected.admin_suspended && selected.suspended_at && (
                       <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--danger)' }}>
                         Acesso suspenso em {new Date(selected.suspended_at).toLocaleDateString('pt-BR')} após 3 tentativas de cobrança sem sucesso. O acesso é restaurado automaticamente quando o pagamento for confirmado.
                       </div>
                     )}
-                    {selected.abacatepay_subscription_status === 'past_due' && (
+                    {selected.abacatepay_subscription_status === 'past_due' && !selected.admin_suspended && (
                       <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--warning)' }}>
                         Pagamento em atraso — o sistema tentará cobrar novamente automaticamente. Após 3 tentativas sem sucesso, o acesso será suspenso.
                       </div>
@@ -578,29 +629,40 @@ const Clinicas = () => {
 
               <label style={{ display: 'block', marginBottom: 14 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
-                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                  {PLANOS.map(p => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => setEditPlano(p.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px 0',
-                        border: `2px solid ${editPlano === p.value ? 'var(--primary)' : 'var(--border)'}`,
-                        borderRadius: 'var(--r-sm)',
-                        background: editPlano === p.value ? 'var(--primary-light)' : 'var(--surface)',
-                        color: editPlano === p.value ? 'var(--primary-dark)' : 'var(--text-secondary)',
-                        fontSize: 12.5,
-                        fontWeight: editPlano === p.value ? 700 : 500,
-                        cursor: 'pointer',
-                        fontFamily: 'Inter, sans-serif',
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                  {PLANOS.map(p => {
+                    const isVip = p.value === 'vip';
+                    const isActive = editPlano === p.value;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => setEditPlano(p.value)}
+                        style={{
+                          flex: '1 1 0',
+                          minWidth: 60,
+                          padding: '8px 0',
+                          border: isActive
+                            ? `2px solid ${isVip ? 'var(--purple, #7c3aed)' : 'var(--primary)'}`
+                            : '2px solid var(--border)',
+                          borderRadius: 'var(--r-sm)',
+                          background: isActive
+                            ? (isVip ? 'var(--purple-light, #f3eeff)' : 'var(--primary-light)')
+                            : 'var(--surface)',
+                          color: isActive
+                            ? (isVip ? 'var(--purple, #7c3aed)' : 'var(--primary-dark)')
+                            : 'var(--text-secondary)',
+                          fontSize: 12.5,
+                          fontWeight: isActive ? 700 : 500,
+                          cursor: 'pointer',
+                          fontFamily: 'Inter, sans-serif',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </label>
 
@@ -619,6 +681,25 @@ const Clinicas = () => {
               {saveResult && (
                 <div className={`alert ${saveResult.ok ? 'a-info' : 'a-danger'}`} style={{ marginBottom: 14 }}>
                   {saveResult.msg}
+                </div>
+              )}
+
+              {/* Confirm suspend zone */}
+              {confirmSuspend && (
+                <div style={{ background: 'var(--danger-light, #fef2f2)', border: '1px solid var(--danger, #e05252)', borderRadius: 'var(--r-sm)', padding: '14px 16px', marginTop: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger, #e05252)', marginBottom: 6 }}>
+                    Suspender acesso desta clínica?
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.5 }}>
+                    A clínica perderá acesso imediato ao sistema. Nenhum dado é excluído. Você pode reativar a qualquer momento.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button variant="primary" size="sm" onClick={handleSuspend} disabled={suspending}
+                      style={{ background: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+                      {suspending ? 'Suspendendo…' : 'Confirmar suspensão'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmSuspend(false)}>Cancelar</Button>
+                  </div>
                 </div>
               )}
 
@@ -656,8 +737,19 @@ const Clinicas = () => {
               <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resending}>
                 {resending ? 'Enviando…' : 'Reenviar convite'}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmDelete(true); }}
-                style={{ marginLeft: 'auto', color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+              {selected.admin_suspended ? (
+                <Button variant="outline" size="sm" onClick={handleReactivate} disabled={suspending}
+                  style={{ color: 'var(--success, #16a34a)', borderColor: 'var(--success, #16a34a)' }}>
+                  {suspending ? 'Reativando…' : 'Reativar clínica'}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmDelete(false); setConfirmSuspend(true); }}
+                  style={{ color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+                  Suspender clínica
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmSuspend(false); setConfirmDelete(true); }}
+                style={{ marginLeft: 'auto', color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)', opacity: 0.7 }}>
                 Excluir clínica
               </Button>
             </div>
