@@ -177,6 +177,13 @@ export async function adminReactivateClinica(clinicaId: string): Promise<void> {
   if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
 }
 
+export async function updateMembroEquipe(
+  membroId: string,
+  updates: Partial<Pick<MembroEquipe, 'nome' | 'email' | 'cargo' | 'ativo'>>,
+): Promise<void> {
+  await crmPatch('equipe', membroId, updates as Record<string, unknown>);
+}
+
 export async function fetchEquipeClinica(clinicaId: string): Promise<MembroEquipe[]> {
   return crmQuery<MembroEquipe>('equipe', {
     select: 'id,user_id,nome,email,cargo,ativo,created_at',
