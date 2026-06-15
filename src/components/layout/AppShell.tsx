@@ -30,7 +30,7 @@ async function resolveClinicContext(clinicId: string): Promise<ClinicContext | n
         _cache = new Map(clinics.map(c => [c.id, {
           id: c.id,
           name: c.nome_clinica,
-          plan: '—',
+          plan: c.plano,
           health: c.health_score,
         }]));
       }).catch(() => {

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import Login from './components/Login/Login'
 import { Loader2 } from 'lucide-react'
+import { FeatureFlagsProvider } from './contexts/FeatureFlagsContext'
 
 // Platform-level pages
 import GlobalDashboard from './pages/GlobalDashboard'
@@ -54,6 +55,7 @@ function App() {
   }
 
   return (
+    <FeatureFlagsProvider>
     <BrowserRouter>
       <Routes>
         {/* Platform Level */}
@@ -81,6 +83,7 @@ function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
+    </FeatureFlagsProvider>
   )
 }
 

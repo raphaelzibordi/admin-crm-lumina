@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useFeatureFlags, normalizePlan } from '../../contexts/FeatureFlagsContext';
 import './Sidebar.css';
 
 interface ClinicContext {
@@ -12,7 +13,6 @@ interface SidebarProps {
   clinicContext?: ClinicContext | null;
 }
 
-// SVG icon helpers
 const Icon = ({ d, special }: { d?: string; special?: string }) => (
   <svg className="ni" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     {special === 'grid' && (
@@ -33,6 +33,12 @@ const Icon = ({ d, special }: { d?: string; special?: string }) => (
     {special === 'building' && <path d="M2 14V2h12v12H2zM5 14v-5h6v5"/>}
     {special === 'calendar' && <><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 3V1M11 3V1M2 7h12"/></>}
     {special === 'commission' && <><circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3l-2 2"/></>}
+    {special === 'lock' && (
+      <>
+        <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path d="M5 7V5a3 3 0 0 1 6 0v2"/>
+      </>
+    )}
     {d && <path d={d}/>}
   </svg>
 );
@@ -45,13 +51,49 @@ const SidebarNavItem = ({ to, icon, label, badge }: { to: string; icon: string; 
   </NavLink>
 );
 
+const LockedNavItem = ({ icon, label, requiredPlan }: { icon: string; label: string; requiredPlan: string }) => (
+  <div className="nav-item" style={{ opacity: 0.45, cursor: 'default', userSelect: 'none' }}>
+    <Icon special={icon} />
+    <span className="nt">{label}</span>
+    <span
+      style={{
+        marginLeft: 'auto',
+        fontSize: 9,
+        fontWeight: 700,
+        color: '#7c3aed',
+        background: '#f5f3ff',
+        padding: '1px 5px',
+        borderRadius: 3,
+        textTransform: 'uppercase',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 3,
+      }}
+    >
+      <Icon special="lock" />
+      {requiredPlan}
+    </span>
+  </div>
+);
+
+const PLAN_LABELS: Record<string, string> = {
+  basico: 'Básico',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+};
+
 const Sidebar = ({ clinicContext }: SidebarProps) => {
   const navigate = useNavigate();
+  const { isEnabled } = useFeatureFlags();
   const clinicId = clinicContext?.id;
+  const plan = normalizePlan(clinicContext?.plan ?? '');
+
+  const canAccess = (flagId: string) => isEnabled(flagId, plan);
+
+  const planLabel = (requiredPlan: 'pro' | 'enterprise') => PLAN_LABELS[requiredPlan];
 
   return (
     <div className="sidebar">
-      {/* Logo */}
       <div className="sb-logo">
         <div className="sb-wordmark">
           Lumina<span className="sb-tag">Admin</span>
@@ -59,7 +101,6 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
       </div>
 
       {clinicContext ? (
-        /* ── Modo drill-down: dentro de uma clínica ── */
         <>
           <div className="sb-clinic-ctx">
             <div className="back" onClick={() => navigate('/dashboard')}>
@@ -70,7 +111,7 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
             </div>
             <div className="clinic-name">{clinicContext.name}</div>
             <div className="clinic-plan">
-              Plano {clinicContext.plan} · Ativa · Health {clinicContext.health}
+              Plano {PLAN_LABELS[clinicContext.plan] ?? clinicContext.plan} · Health {clinicContext.health}
             </div>
           </div>
 
@@ -78,23 +119,36 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
             <div className="sb-sec-label">Operacional</div>
             <SidebarNavItem to={`/clinicas/${clinicId}/equipe`}        icon="users"    label="Equipe" />
             <SidebarNavItem to={`/clinicas/${clinicId}/procedimentos`} icon="clock"    label="Procedimentos" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" />
+            {canAccess('gestao-salas')
+              ? <SidebarNavItem to={`/clinicas/${clinicId}/salas`} icon="building" label="Salas" />
+              : <LockedNavItem icon="building" label="Salas" requiredPlan={planLabel('pro')} />
+            }
             <SidebarNavItem to={`/clinicas/${clinicId}/agenda`}        icon="calendar" label="Agenda" />
           </div>
+
           <div className="sb-sec">
             <div className="sb-sec-label">Financeiro</div>
-            <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`}   icon="bars"       label="Relatórios" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`}    icon="commission" label="Comissões" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/faturamento`}  icon="credit"     label="Faturamento" />
+            {canAccess('relatorios-avancados')
+              ? <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`} icon="bars" label="Relatórios" />
+              : <LockedNavItem icon="bars" label="Relatórios" requiredPlan={planLabel('pro')} />
+            }
+            {canAccess('financeiro-avancado')
+              ? <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`} icon="commission" label="Comissões" />
+              : <LockedNavItem icon="commission" label="Comissões" requiredPlan={planLabel('pro')} />
+            }
+            <SidebarNavItem to={`/clinicas/${clinicId}/faturamento`} icon="credit" label="Faturamento" />
           </div>
+
           <div className="sb-sec">
             <div className="sb-sec-label">Admin</div>
             <SidebarNavItem to={`/clinicas/${clinicId}/configuracoes`} icon="settings" label="Configurações" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/seguranca`}     icon="shield"   label="Segurança" />
+            {canAccess('lgpd')
+              ? <SidebarNavItem to={`/clinicas/${clinicId}/seguranca`} icon="shield" label="Segurança" />
+              : <LockedNavItem icon="shield" label="Segurança" requiredPlan={planLabel('pro')} />
+            }
           </div>
         </>
       ) : (
-        /* ── Modo plataforma global ── */
         <>
           <div className="sb-sec">
             <div className="sb-sec-label">Plataforma</div>
@@ -118,7 +172,6 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
         </>
       )}
 
-      {/* Footer */}
       <div className="sb-footer">
         <div className="user-chip">
           <div className="avatar">RZ</div>
