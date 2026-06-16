@@ -5,11 +5,13 @@ import { Badge, Button, Card, CardHeader, MetricCard, Tabs, HealthBar } from '..
 import { fetchClinicas, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
+const formatPreco = (v: number) => `R$${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const PLANO_INFO: Record<PlanoClinica, { label: string; variant: 'purple' | 'info' | 'neutral' | 'teal'; preco: number }> = {
-  basico:     { label: 'Básico',     variant: 'neutral', preco: 149 },
-  pro:        { label: 'Pro',        variant: 'info',    preco: 299 },
-  enterprise: { label: 'Enterprise', variant: 'purple',  preco: 599 },
-  vip:        { label: 'VIP',        variant: 'teal',    preco: 999 },
+  basico:     { label: 'Básico',     variant: 'neutral', preco: 39.90  },
+  pro:        { label: 'Pro',        variant: 'info',    preco: 89.90  },
+  enterprise: { label: 'Enterprise', variant: 'purple',  preco: 119.90 },
+  vip:        { label: 'VIP',        variant: 'teal',    preco: 119.90 },
 };
 
 const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
@@ -54,7 +56,7 @@ const Faturamento = () => {
   return (
     <AppShell topbarRight={topbarRight}>
       <div className="metrics" style={{ marginBottom: 16 }}>
-        <MetricCard label="MRR Estimado"      value={`R$${mrr.toLocaleString('pt-BR')}`}  delta="Receita mensal recorrente" deltaType="up" />
+        <MetricCard label="MRR Estimado"      value={formatPreco(mrr)}  delta="Receita mensal recorrente" deltaType="up" />
         <MetricCard label="Assinaturas Ativas" value={String(ativas)}                       delta={`de ${clinicas.length} clínicas`} deltaType="up" />
         <MetricCard label="Em Risco"           value={String(emRisco)}                      delta="Health entre 30–49"  deltaType={emRisco  > 0 ? 'down' : 'up'} />
         <MetricCard label="Críticas"           value={String(criticas)}                     delta="Health abaixo de 30" deltaType={criticas > 0 ? 'down' : 'up'} />
@@ -104,7 +106,7 @@ const Faturamento = () => {
                         <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{c.email}</span>
                       </td>
                       <td><Badge variant={plan.variant}>{plan.label}</Badge></td>
-                      <td><strong>R${plan.preco}</strong></td>
+                      <td><strong>{formatPreco(plan.preco)}</strong></td>
                       <td style={{ fontSize: 12 }}>{c.total_agendamentos}</td>
                       <td><HealthBar value={c.health_score} /></td>
                       <td><Badge variant={status.variant}>{status.label}</Badge></td>
@@ -147,7 +149,7 @@ const Faturamento = () => {
                   return (
                     <tr key={c.id}>
                       <td><strong>{c.nome_clinica}</strong></td>
-                      <td><strong>R${plan.preco}</strong></td>
+                      <td><strong>{formatPreco(plan.preco)}</strong></td>
                       <td style={{ fontSize: 12 }}>{c.total_agendamentos} agendamentos</td>
                       <td><Badge variant={status.variant}>{status.label}</Badge></td>
                     </tr>
