@@ -24,6 +24,7 @@ import AgendaClinica from './pages/clinica/AgendaClinica'
 import FaturamentoClinica from './pages/clinica/FaturamentoClinica'
 import SegurancaClinica from './pages/clinica/SegurancaClinica'
 import ConfiguracoesClinica from './pages/clinica/ConfiguracoesClinica'
+import ClientesClinica from './pages/clinica/ClientesClinica'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -68,6 +69,7 @@ function App() {
         <Route path="/equipe-admin"  element={<EquipeAdmin />} />
 
         {/* Clinic Drill-down Level */}
+        <Route path="/clinicas/:clinicId/clientes"       element={<ClientesClinica />} />
         <Route path="/clinicas/:clinicId/equipe"        element={<EquipeClinica />} />
         <Route path="/clinicas/:clinicId/procedimentos" element={<ProcedimentosClinica />} />
         <Route path="/clinicas/:clinicId/salas"         element={<SalasClinica />} />

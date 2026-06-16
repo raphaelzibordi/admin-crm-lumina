@@ -71,6 +71,15 @@ export interface Sala {
   created_at: string;
 }
 
+export interface Cliente {
+  id: string;
+  user_id: string;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  created_at: string;
+}
+
 export interface Agendamento {
   id: string;
   user_id: string;
@@ -184,6 +193,14 @@ export async function updateMembroEquipe(
   updates: Partial<Pick<MembroEquipe, 'nome' | 'email' | 'cargo' | 'ativo'>>,
 ): Promise<void> {
   await crmPatch('equipe', membroId, updates as Record<string, unknown>);
+}
+
+export async function fetchClientesClinica(clinicaId: string): Promise<Cliente[]> {
+  return crmQuery<Cliente>('clientes', {
+    select: 'id,user_id,nome,email,telefone,created_at',
+    filters: { user_id: `eq.${clinicaId}` },
+    order: 'created_at.desc',
+  });
 }
 
 export async function fetchEquipeClinica(clinicaId: string): Promise<MembroEquipe[]> {

@@ -32,6 +32,7 @@ const Icon = ({ d, special }: { d?: string; special?: string }) => (
     {special === 'building' && <path d="M2 14V2h12v12H2zM5 14v-5h6v5"/>}
     {special === 'calendar' && <><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 3V1M11 3V1M2 7h12"/></>}
     {special === 'commission' && <><circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3l-2 2"/></>}
+    {special === 'person' && <><circle cx="8" cy="5" r="2.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></>}
     {d && <path d={d}/>}
   </svg>
 );
@@ -80,6 +81,7 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
 
           <div className="sb-sec">
             <div className="sb-sec-label">Operacional</div>
+            <SidebarNavItem to={`/clinicas/${clinicId}/clientes`}      icon="person"   label="Clientes" />
             <SidebarNavItem to={`/clinicas/${clinicId}/equipe`}        icon="users"    label="Equipe" />
             <SidebarNavItem to={`/clinicas/${clinicId}/procedimentos`} icon="clock"    label="Procedimentos" />
             <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" />

@@ -26,6 +26,7 @@ const Topbar = ({ clinicName, right }: TopbarProps) => {
   };
 
   const clinicSubpageMap: Record<string, string> = {
+    clientes: 'Clientes',
     equipe: 'Equipe',
     procedimentos: 'Procedimentos',
     salas: 'Salas',
