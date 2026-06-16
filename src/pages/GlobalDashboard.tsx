@@ -58,7 +58,7 @@ const GlobalDashboard = () => {
   const loadClinicas = () => {
     setLoading(true);
     fetchClinicas()
-      .then(setClinicas)
+      .then(data => setClinicas(data.filter(c => !c.arquivado)))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   };
