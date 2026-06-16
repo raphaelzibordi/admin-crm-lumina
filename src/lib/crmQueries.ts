@@ -20,6 +20,7 @@ export interface Clinica {
   acesso_expira_em: string | null;
   suspended_at: string | null;
   admin_suspended: boolean;
+  arquivado: boolean;
 }
 
 export interface ClinicaConfig {
@@ -110,7 +111,7 @@ export async function fetchClinicas(): Promise<Clinica[]> {
   const [donos, clientes, agendamentos, equipe] = await Promise.all([
     crmQuery<{ id: string; nome_clinica: string; email: string; created_at: string; plano: PlanoClinica; abacatepay_subscription_status: string | null; plano_periodicidade: string | null; acesso_expira_em: string | null; suspended_at: string | null; admin_suspended: boolean }>(
       'usuarios',
-      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em,suspended_at,admin_suspended', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
+      { select: 'id,nome_clinica,email,created_at,plano,abacatepay_subscription_status,plano_periodicidade,acesso_expira_em,suspended_at,admin_suspended,arquivado', filters: { role: 'eq.dono' }, order: 'created_at.desc' }
     ),
     crmQuery<{ user_id: string }>('clientes', { select: 'user_id' }),
     crmQuery<{ user_id: string; valor: number }>('agendamentos', { select: 'user_id,valor' }),
@@ -139,6 +140,7 @@ export async function fetchClinicas(): Promise<Clinica[]> {
       acesso_expira_em: d.acesso_expira_em ?? null,
       suspended_at: d.suspended_at ?? null,
       admin_suspended: d.admin_suspended ?? false,
+      arquivado: (d as { arquivado?: boolean }).arquivado ?? false,
     };
   });
 }
@@ -273,6 +275,27 @@ export async function deleteClinica(id: string): Promise<void> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ action: 'delete-clinica', id }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) {
+    const err = new Error(json?.error ?? `HTTP ${res.status}`);
+    (err as Error & { code?: string }).code = json?.code;
+    throw err;
+  }
+}
+
+export async function archiveClinica(id: string): Promise<void> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'archive-clinica', id }),
     }
   );
   const json = await res.json();

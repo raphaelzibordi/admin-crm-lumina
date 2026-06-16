@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, adminChangePlan, adminSuspendClinica, adminReactivateClinica, createClinica, deleteClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, adminChangePlan, adminSuspendClinica, adminReactivateClinica, createClinica, deleteClinica, archiveClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
-type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica';
+type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica' | 'arquivada';
 
 const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
   pending:   { label: 'Aguardando ativação', variant: 'info'    },
@@ -132,6 +132,8 @@ const Clinicas = () => {
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const [resending, setResending] = useState(false);
   const [suspending, setSuspending] = useState(false);
   const [confirmSuspend, setConfirmSuspend] = useState(false);
@@ -176,6 +178,8 @@ const Clinicas = () => {
     const q = search.toLowerCase();
     const matchSearch = !q || c.nome_clinica.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
     if (!matchSearch) return false;
+    if (statusFilter === 'arquivada') return c.arquivado;
+    if (c.arquivado) return false;
     if (statusFilter === 'ativa')   return c.health_score >= 60;
     if (statusFilter === 'risco')   return c.health_score >= 35 && c.health_score < 60;
     if (statusFilter === 'critica') return c.health_score < 35;
@@ -190,9 +194,10 @@ const Clinicas = () => {
     setSaveResult(null);
     setConfirmDelete(false);
     setConfirmSuspend(false);
+    setConfirmArchive(false);
   };
 
-  const closePanel = () => { setSelected(null); setConfirmDelete(false); setConfirmSuspend(false); };
+  const closePanel = () => { setSelected(null); setConfirmDelete(false); setConfirmSuspend(false); setConfirmArchive(false); };
 
   const handleSuspend = async () => {
     if (!selected) return;
@@ -236,9 +241,31 @@ const Clinicas = () => {
       setConfirmDelete(false);
       loadClinicas();
     } catch (e: unknown) {
-      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+      const err = e as Error & { code?: string };
+      if (err.code === 'SIGNED_RECORDS') {
+        setConfirmDelete(false);
+        setConfirmArchive(true);
+        setSaveResult({ ok: false, msg: 'Esta clínica possui prontuários assinados e não pode ser excluída (CFM 1.638/2002). Você pode arquivá-la: o acesso é bloqueado e o e-mail liberado para reutilização.' });
+      } else {
+        setSaveResult({ ok: false, msg: err.message });
+      }
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!selected) return;
+    setArchiving(true);
+    try {
+      await archiveClinica(selected.id);
+      setSelected(null);
+      setConfirmArchive(false);
+      loadClinicas();
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -321,6 +348,7 @@ const Clinicas = () => {
           <option value="ativa">Ativa</option>
           <option value="risco">Em risco</option>
           <option value="critica">Crítica</option>
+          <option value="arquivada">Arquivada</option>
         </select>
 
         <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
@@ -740,6 +768,25 @@ const Clinicas = () => {
                   </div>
                 </div>
               )}
+
+              {/* Confirm archive zone */}
+              {confirmArchive && (
+                <div style={{ background: '#fffbeb', border: '1px solid #d97706', borderRadius: 'var(--r-sm)', padding: '14px 16px', marginTop: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#d97706', marginBottom: 6 }}>
+                    Arquivar clínica?
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.5 }}>
+                    A clínica será suspensa permanentemente, os dados serão mantidos e o e-mail será liberado para uso em outro cadastro.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button variant="primary" size="sm" onClick={handleArchive} disabled={archiving}
+                      style={{ background: '#d97706', borderColor: '#d97706' }}>
+                      {archiving ? 'Arquivando…' : 'Confirmar arquivamento'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmArchive(false)}>Cancelar</Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Panel footer */}
@@ -756,21 +803,27 @@ const Clinicas = () => {
               <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resending}>
                 {resending ? 'Enviando…' : 'Reenviar convite'}
               </Button>
-              {selected.admin_suspended ? (
-                <Button variant="outline" size="sm" onClick={handleReactivate} disabled={suspending}
-                  style={{ color: 'var(--success, #16a34a)', borderColor: 'var(--success, #16a34a)' }}>
-                  {suspending ? 'Reativando…' : 'Reativar clínica'}
-                </Button>
+              {!selected.arquivado && (
+                selected.admin_suspended ? (
+                  <Button variant="outline" size="sm" onClick={handleReactivate} disabled={suspending}
+                    style={{ color: 'var(--success, #16a34a)', borderColor: 'var(--success, #16a34a)' }}>
+                    {suspending ? 'Reativando…' : 'Reativar clínica'}
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmDelete(false); setConfirmArchive(false); setConfirmSuspend(true); }}
+                    style={{ color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
+                    Suspender clínica
+                  </Button>
+                )
+              )}
+              {selected.arquivado ? (
+                <span style={{ marginLeft: 'auto', fontSize: 12, color: '#d97706', fontWeight: 600 }}>Clínica arquivada</span>
               ) : (
-                <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmDelete(false); setConfirmSuspend(true); }}
-                  style={{ color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)' }}>
-                  Suspender clínica
+                <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmSuspend(false); setConfirmArchive(false); setConfirmDelete(true); }}
+                  style={{ marginLeft: 'auto', color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)', opacity: 0.7 }}>
+                  Excluir clínica
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => { setSaveResult(null); setConfirmSuspend(false); setConfirmDelete(true); }}
-                style={{ marginLeft: 'auto', color: 'var(--danger, #e05252)', borderColor: 'var(--danger, #e05252)', opacity: 0.7 }}>
-                Excluir clínica
-              </Button>
             </div>
           </div>
         </>
