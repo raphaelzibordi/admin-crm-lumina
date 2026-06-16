@@ -2,22 +2,31 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, Card, CardHeader, MetricCard, Tabs, HealthBar } from '../components/ui';
-import { fetchClinicas, type Clinica } from '../lib/crmQueries';
+import { fetchClinicas, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
-const planFromHealth = (h: number): { label: string; variant: 'purple' | 'info' | 'neutral' } => {
-  if (h >= 80) return { label: 'Enterprise', variant: 'purple' };
-  if (h >= 50) return { label: 'Pro',        variant: 'info'   };
-  return               { label: 'Básico',    variant: 'neutral' };
+const PLANO_INFO: Record<PlanoClinica, { label: string; variant: 'purple' | 'info' | 'neutral' | 'teal'; preco: number }> = {
+  basico:     { label: 'Básico',     variant: 'neutral', preco: 149 },
+  pro:        { label: 'Pro',        variant: 'info',    preco: 299 },
+  enterprise: { label: 'Enterprise', variant: 'purple',  preco: 599 },
+  vip:        { label: 'VIP',        variant: 'teal',    preco: 999 },
 };
 
-const priceFromHealth = (h: number) => h >= 80 ? 599 : h >= 50 ? 299 : 149;
-
-const statusFromHealth = (h: number): { label: string; variant: 'success' | 'warning' | 'danger' } => {
-  if (h >= 50) return { label: 'Ativa',    variant: 'success' };
-  if (h >= 30) return { label: 'Em risco', variant: 'warning' };
-  return               { label: 'Crítica', variant: 'danger'  };
+const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
+  pending:   { label: 'Aguardando',  variant: 'info'    },
+  active:    { label: 'Ativa',       variant: 'success' },
+  past_due:  { label: 'Inadimplente', variant: 'warning' },
+  suspended: { label: 'Suspensa',    variant: 'danger'  },
+  canceled:  { label: 'Cancelada',   variant: 'neutral' },
 };
+
+function getStatusBadge(c: Clinica): { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' } {
+  if (c.admin_suspended) return { label: 'Suspensa', variant: 'danger' };
+  if (c.abacatepay_subscription_status) {
+    return BILLING_STATUS[c.abacatepay_subscription_status] ?? { label: c.abacatepay_subscription_status, variant: 'neutral' };
+  }
+  return { label: 'Sem assinatura', variant: 'neutral' };
+}
 
 const Faturamento = () => {
   const navigate = useNavigate();
@@ -33,10 +42,10 @@ const Faturamento = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const ativas   = clinicas.filter(c => c.health_score >= 50).length;
-  const emRisco  = clinicas.filter(c => c.health_score >= 30 && c.health_score < 50).length;
-  const criticas = clinicas.filter(c => c.health_score < 30).length;
-  const mrr      = clinicas.reduce((s, c) => s + priceFromHealth(c.health_score), 0);
+  const ativas   = clinicas.filter(c => !c.admin_suspended && c.abacatepay_subscription_status === 'active').length;
+  const emRisco  = clinicas.filter(c => c.abacatepay_subscription_status === 'past_due').length;
+  const criticas = clinicas.filter(c => c.admin_suspended || c.abacatepay_subscription_status === 'suspended').length;
+  const mrr      = clinicas.filter(c => !c.admin_suspended && c.abacatepay_subscription_status === 'active').reduce((s, c) => s + (PLANO_INFO[c.plano]?.preco ?? 0), 0);
 
   const topbarRight = (
     <Button variant="outline" size="sm">Sincronizar AbacatePay</Button>
@@ -85,9 +94,8 @@ const Faturamento = () => {
               </thead>
               <tbody>
                 {[...clinicas].sort((a, b) => b.health_score - a.health_score).map(c => {
-                  const plan   = planFromHealth(c.health_score);
-                  const status = statusFromHealth(c.health_score);
-                  const price  = priceFromHealth(c.health_score);
+                  const plan   = PLANO_INFO[c.plano] ?? PLANO_INFO.basico;
+                  const status = getStatusBadge(c);
                   return (
                     <tr key={c.id}>
                       <td>
@@ -96,7 +104,7 @@ const Faturamento = () => {
                         <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{c.email}</span>
                       </td>
                       <td><Badge variant={plan.variant}>{plan.label}</Badge></td>
-                      <td><strong>R${price}</strong></td>
+                      <td><strong>R${plan.preco}</strong></td>
                       <td style={{ fontSize: 12 }}>{c.total_agendamentos}</td>
                       <td><HealthBar value={c.health_score} /></td>
                       <td><Badge variant={status.variant}>{status.label}</Badge></td>
@@ -134,12 +142,12 @@ const Faturamento = () => {
               </thead>
               <tbody>
                 {[...clinicas].sort((a, b) => b.health_score - a.health_score).map(c => {
-                  const status = statusFromHealth(c.health_score);
-                  const price  = priceFromHealth(c.health_score);
+                  const plan   = PLANO_INFO[c.plano] ?? PLANO_INFO.basico;
+                  const status = getStatusBadge(c);
                   return (
                     <tr key={c.id}>
                       <td><strong>{c.nome_clinica}</strong></td>
-                      <td><strong>R${price}</strong></td>
+                      <td><strong>R${plan.preco}</strong></td>
                       <td style={{ fontSize: 12 }}>{c.total_agendamentos} agendamentos</td>
                       <td><Badge variant={status.variant}>{status.label}</Badge></td>
                     </tr>
