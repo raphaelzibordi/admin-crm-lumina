@@ -180,7 +180,7 @@ export function useFeatureFlags() {
 
 export function normalizePlan(plan: string): Plan | null {
   const p = plan.toLowerCase().trim();
-  if (p.includes('enterprise')) return 'enterprise';
+  if (p === 'vip' || p.includes('enterprise')) return 'enterprise';
   if (p.includes('pro')) return 'pro';
   if (p.includes('básico') || p.includes('basico') || p.includes('basic')) return 'basico';
   return null;

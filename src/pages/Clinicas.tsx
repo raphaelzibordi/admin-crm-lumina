@@ -28,11 +28,11 @@ function trialDaysLeft(iso: string | null): number | null {
   return Math.ceil(diff / 86_400_000);
 }
 
-const PLANOS: { value: PlanoClinica; label: string; badge: 'neutral' | 'info' | 'purple' }[] = [
+const PLANOS: { value: PlanoClinica; label: string; badge: 'neutral' | 'info' | 'purple' | 'teal' }[] = [
   { value: 'basico',     label: 'Básico',     badge: 'neutral' },
   { value: 'pro',        label: 'Pro',        badge: 'info'    },
   { value: 'enterprise', label: 'Enterprise', badge: 'purple'  },
-  { value: 'vip',        label: 'VIP',        badge: 'purple'  },
+  { value: 'vip',        label: 'VIP',        badge: 'teal'    },
 ];
 
 function getStatus(score: number): { label: string; variant: 'success' | 'warning' | 'danger' } {
@@ -440,21 +440,40 @@ const Clinicas = () => {
               <label style={{ display: 'block', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
               </label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                {PLANOS.map(p => (
-                  <button key={p.value} type="button" onClick={() => setNewPlano(p.value)} style={{
-                    flex: 1, padding: '8px 0',
-                    border: `2px solid ${newPlano === p.value ? 'var(--primary)' : 'var(--border)'}`,
-                    borderRadius: 'var(--r-sm)',
-                    background: newPlano === p.value ? 'var(--primary-light)' : 'var(--surface)',
-                    color: newPlano === p.value ? 'var(--primary-dark)' : 'var(--text-secondary)',
-                    fontSize: 12.5, fontWeight: newPlano === p.value ? 700 : 500,
-                    cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
-                  }}>
-                    {p.label}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: 8, marginBottom: newPlano === 'vip' ? 8 : 20 }}>
+                {PLANOS.map(p => {
+                  const isActive = newPlano === p.value;
+                  const isVip = p.value === 'vip';
+                  return (
+                    <button key={p.value} type="button" onClick={() => setNewPlano(p.value)} style={{
+                      flex: 1, padding: '8px 0',
+                      border: isActive
+                        ? `2px solid ${isVip ? '#0d9488' : 'var(--primary)'}`
+                        : '2px solid var(--border)',
+                      borderRadius: 'var(--r-sm)',
+                      background: isActive
+                        ? (isVip ? '#f0fdfa' : 'var(--primary-light)')
+                        : 'var(--surface)',
+                      color: isActive
+                        ? (isVip ? '#0d9488' : 'var(--primary-dark)')
+                        : 'var(--text-secondary)',
+                      fontSize: 12.5, fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
+                    }}>
+                      {p.label}
+                    </button>
+                  );
+                })}
               </div>
+              {newPlano === 'vip' && (
+                <div style={{
+                  marginBottom: 16, padding: '8px 12px',
+                  background: '#f0fdfa', border: '1px solid #99f6e4',
+                  borderRadius: 'var(--r-sm)', fontSize: 11.5, color: '#0d9488',
+                }}>
+                  ✦ Parceiro VIP — acesso gratuito com todas as permissões Enterprise. Nenhuma cobrança será gerada.
+                </div>
+              )}
               {createError && (
                 <div className="alert a-danger" style={{ marginBottom: 14 }}>{createError}</div>
               )}
