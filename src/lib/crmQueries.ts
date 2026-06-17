@@ -336,6 +336,22 @@ export async function resendInvite(email: string, nome_clinica: string): Promise
   if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
 }
 
+export async function resetClinicaPassword(email: string): Promise<void> {
+  const baseUrl = (import.meta.env.VITE_CRM_QUERY_URL as string).replace(/\/functions\/v1\/.*$/, '');
+  const res = await fetch(`${baseUrl}/auth/v1/recover`, {
+    method: 'POST',
+    headers: {
+      'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json?.message ?? `HTTP ${res.status}`);
+  }
+}
+
 export async function createClinica(data: { nome_clinica: string; email: string; plano: PlanoClinica }): Promise<void> {
   const res = await fetch(
     (import.meta.env.VITE_CRM_QUERY_URL as string),

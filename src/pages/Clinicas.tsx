@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { Badge, Button, HealthBar } from '../components/ui';
-import { fetchClinicas, updateClinica, adminChangePlan, adminSuspendClinica, adminReactivateClinica, createClinica, deleteClinica, archiveClinica, resendInvite, type Clinica, type PlanoClinica } from '../lib/crmQueries';
+import { fetchClinicas, updateClinica, adminChangePlan, adminSuspendClinica, adminReactivateClinica, createClinica, deleteClinica, archiveClinica, resendInvite, resetClinicaPassword, type Clinica, type PlanoClinica } from '../lib/crmQueries';
 import '../components/ui/ui.css';
 
 type StatusFilter = 'all' | 'ativa' | 'risco' | 'critica' | 'arquivada';
@@ -135,6 +135,7 @@ const Clinicas = () => {
   const [archiving, setArchiving] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [suspending, setSuspending] = useState(false);
   const [confirmSuspend, setConfirmSuspend] = useState(false);
 
@@ -266,6 +267,20 @@ const Clinicas = () => {
       setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
     } finally {
       setArchiving(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selected) return;
+    setResettingPassword(true);
+    setSaveResult(null);
+    try {
+      await resetClinicaPassword(selected.email);
+      setSaveResult({ ok: true, msg: `Link de redefinição de senha enviado para ${selected.email}.` });
+    } catch (e: unknown) {
+      setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setResettingPassword(false);
     }
   };
 
@@ -802,6 +817,9 @@ const Clinicas = () => {
               </Button>
               <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resending}>
                 {resending ? 'Enviando…' : 'Reenviar convite'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleResetPassword} disabled={resettingPassword}>
+                {resettingPassword ? 'Enviando…' : 'Reset de senha'}
               </Button>
               {!selected.arquivado && (
                 selected.admin_suspended ? (
