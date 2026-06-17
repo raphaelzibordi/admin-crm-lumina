@@ -45,6 +45,7 @@ async function resolveClinicContext(clinicId: string): Promise<ClinicContext | n
 const AppShell = ({ children, clinicContext, topbarRight }: AppShellProps) => {
   const { clinicId } = useParams<{ clinicId: string }>();
   const [resolvedClinic, setResolvedClinic] = useState<ClinicContext | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (clinicContext !== undefined) {
@@ -61,10 +62,17 @@ const AppShell = ({ children, clinicContext, topbarRight }: AppShellProps) => {
   const activeClinic = clinicContext !== undefined ? (clinicContext ?? null) : resolvedClinic;
 
   return (
-    <div className="shell">
-      <Sidebar clinicContext={activeClinic} />
+    <div className={`shell ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+      <Sidebar clinicContext={activeClinic} onClose={() => setSidebarOpen(false)} />
       <div className="page">
-        <Topbar clinicName={activeClinic?.name} right={topbarRight} />
+        <Topbar 
+          clinicName={activeClinic?.name} 
+          right={topbarRight} 
+          onToggleSidebar={() => setSidebarOpen(true)} 
+        />
         <div className="pbody">
           {children}
         </div>

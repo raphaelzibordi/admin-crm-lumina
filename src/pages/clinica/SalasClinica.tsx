@@ -282,7 +282,7 @@ const SalasClinica = () => {
           <div style={{
             position: 'fixed', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 420, background: 'var(--surface)',
+            width: 'calc(100% - 32px)', maxWidth: 420, background: 'var(--surface)',
             border: '1px solid var(--border)', borderRadius: 'var(--r)',
             zIndex: 201, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
@@ -341,7 +341,7 @@ const SalasClinica = () => {
         <>
           <div onClick={closePanel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 100 }} />
           <div style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: 440,
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 440,
             background: 'var(--surface)', borderLeft: '1px solid var(--border)',
             zIndex: 101, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>

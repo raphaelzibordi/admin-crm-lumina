@@ -10,6 +10,7 @@ interface ClinicContext {
 
 interface SidebarProps {
   clinicContext?: ClinicContext | null;
+  onClose?: () => void;
 }
 
 const Icon = ({ d, special }: { d?: string; special?: string }) => (
@@ -37,8 +38,8 @@ const Icon = ({ d, special }: { d?: string; special?: string }) => (
   </svg>
 );
 
-const SidebarNavItem = ({ to, icon, label, badge }: { to: string; icon: string; label: string; badge?: number }) => (
-  <NavLink to={to} className={({ isActive }) => `nav-item ${isActive ? 'on' : ''}`}>
+const SidebarNavItem = ({ to, icon, label, badge, onClick }: { to: string; icon: string; label: string; badge?: number; onClick?: () => void }) => (
+  <NavLink to={to} className={({ isActive }) => `nav-item ${isActive ? 'on' : ''}`} onClick={onClick}>
     <Icon special={icon} />
     <span className="nt">{label}</span>
     {badge !== undefined && <span className="nb">{badge}</span>}
@@ -52,7 +53,7 @@ const PLAN_LABELS: Record<string, string> = {
   enterprise: 'Enterprise',
 };
 
-const Sidebar = ({ clinicContext }: SidebarProps) => {
+const Sidebar = ({ clinicContext, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const clinicId = clinicContext?.id;
 
@@ -67,7 +68,7 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
       {clinicContext ? (
         <>
           <div className="sb-clinic-ctx">
-            <div className="back" onClick={() => navigate('/dashboard')}>
+            <div className="back" onClick={() => { navigate('/dashboard'); onClose?.(); }}>
               <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M8 2L4 6l4 4"/>
               </svg>
@@ -81,46 +82,46 @@ const Sidebar = ({ clinicContext }: SidebarProps) => {
 
           <div className="sb-sec">
             <div className="sb-sec-label">Operacional</div>
-            <SidebarNavItem to={`/clinicas/${clinicId}/clientes`}      icon="person"   label="Clientes" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/equipe`}        icon="users"    label="Equipe" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/procedimentos`} icon="clock"    label="Procedimentos" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/agenda`}        icon="calendar" label="Agenda" />
+            <SidebarNavItem to={`/clinicas/${clinicId}/clientes`}      icon="person"   label="Clientes" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/equipe`}        icon="users"    label="Equipe" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/procedimentos`} icon="clock"    label="Procedimentos" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/agenda`}        icon="calendar" label="Agenda" onClick={onClose} />
           </div>
 
           <div className="sb-sec">
             <div className="sb-sec-label">Financeiro</div>
-            <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`}  icon="bars"       label="Relatórios" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`}   icon="commission" label="Comissões" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/faturamento`} icon="credit"     label="Faturamento" />
+            <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`}  icon="bars"       label="Relatórios" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`}   icon="commission" label="Comissões" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/faturamento`} icon="credit"     label="Faturamento" onClick={onClose} />
           </div>
 
           <div className="sb-sec">
             <div className="sb-sec-label">Admin</div>
-            <SidebarNavItem to={`/clinicas/${clinicId}/configuracoes`} icon="settings" label="Configurações" />
-            <SidebarNavItem to={`/clinicas/${clinicId}/seguranca`}     icon="shield"   label="Segurança" />
+            <SidebarNavItem to={`/clinicas/${clinicId}/configuracoes`} icon="settings" label="Configurações" onClick={onClose} />
+            <SidebarNavItem to={`/clinicas/${clinicId}/seguranca`}     icon="shield"   label="Segurança" onClick={onClose} />
           </div>
         </>
       ) : (
         <>
           <div className="sb-sec">
             <div className="sb-sec-label">Plataforma</div>
-            <SidebarNavItem to="/dashboard"  icon="grid" label="Dashboard" />
-            <SidebarNavItem to="/clinicas"   icon="list" label="Clínicas" />
+            <SidebarNavItem to="/dashboard"  icon="grid" label="Dashboard" onClick={onClose} />
+            <SidebarNavItem to="/clinicas"   icon="list" label="Clínicas" onClick={onClose} />
           </div>
           <div className="sb-sec">
             <div className="sb-sec-label">Financeiro</div>
-            <SidebarNavItem to="/faturamento" icon="credit" label="Faturamento" />
-            <SidebarNavItem to="/relatorios"  icon="bars"   label="Relatórios" />
+            <SidebarNavItem to="/faturamento" icon="credit" label="Faturamento" onClick={onClose} />
+            <SidebarNavItem to="/relatorios"  icon="bars"   label="Relatórios" onClick={onClose} />
           </div>
           <div className="sb-sec">
             <div className="sb-sec-label">Controle</div>
-            <SidebarNavItem to="/feature-flags" icon="settings" label="Feature Flags" />
-            <SidebarNavItem to="/seguranca"     icon="shield"   label="Segurança / LGPD" badge={3} />
+            <SidebarNavItem to="/feature-flags" icon="settings" label="Feature Flags" onClick={onClose} />
+            <SidebarNavItem to="/seguranca"     icon="shield"   label="Segurança / LGPD" badge={3} onClick={onClose} />
           </div>
           <div className="sb-sec">
             <div className="sb-sec-label">Acesso</div>
-            <SidebarNavItem to="/equipe-admin" icon="users" label="Equipe Admin" />
+            <SidebarNavItem to="/equipe-admin" icon="users" label="Equipe Admin" onClick={onClose} />
           </div>
         </>
       )}

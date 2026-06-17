@@ -213,3 +213,65 @@ tbody td { padding: 11px 14px; font-size: 12.5px; }
 .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+
+/* ── UI Components Responsiveness ────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .g3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  /* Make tables horizontally scrollable inside cards */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  .g2 {
+    grid-template-columns: 1fr;
+  }
+  .g3 {
+    grid-template-columns: 1fr;
+  }
+  .g4 {
+    grid-template-columns: 1fr;
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .clinic-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .clinic-card-identity {
+    min-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+  .clinic-card-metrics {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+  }
+  .clinic-card-status {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+}

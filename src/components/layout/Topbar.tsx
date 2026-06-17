@@ -6,9 +6,10 @@ import './Topbar.css';
 interface TopbarProps {
   clinicName?: string;
   right?: ReactNode;
+  onToggleSidebar?: () => void;
 }
 
-const Topbar = ({ clinicName, right }: TopbarProps) => {
+const Topbar = ({ clinicName, right, onToggleSidebar }: TopbarProps) => {
   const location = useLocation();
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -47,13 +48,20 @@ const Topbar = ({ clinicName, right }: TopbarProps) => {
 
   return (
     <div className="topbar">
+      {onToggleSidebar && (
+        <button className="menu-toggle-btn" onClick={onToggleSidebar} title="Menu">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M2 3h12M2 8h12M2 13h12" />
+          </svg>
+        </button>
+      )}
       <div className="bc">
         {isClinicDrilldown ? (
           <>
-            <span>Plataforma</span>
-            <span className="sep">›</span>
-            <span>Clínicas</span>
-            <span className="sep">›</span>
+            <span className="bc-parent">Plataforma</span>
+            <span className="sep bc-parent">›</span>
+            <span className="bc-parent">Clínicas</span>
+            <span className="sep bc-parent">›</span>
             <span className="clinic-pill">{clinicName || 'Clínica'}</span>
             <span className="sep">›</span>
             <span className="cur">{currentPageLabel}</span>

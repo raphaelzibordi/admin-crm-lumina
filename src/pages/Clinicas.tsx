@@ -389,6 +389,7 @@ const Clinicas = () => {
               <div
                 key={c.id}
                 onClick={() => openDetail(c)}
+                className="clinic-card"
                 style={{
                   background: 'var(--surface)',
                   border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
@@ -404,7 +405,7 @@ const Clinicas = () => {
                 onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'var(--surface)'; }}
               >
                 {/* Identity */}
-                <div style={{ minWidth: 200, flex: '0 0 200px' }}>
+                <div className="clinic-card-identity" style={{ minWidth: 200, flex: '0 0 200px' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-main)' }}>{c.nome_clinica}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{c.email}</div>
                   <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1 }}>
@@ -413,7 +414,7 @@ const Clinicas = () => {
                 </div>
 
                 {/* Metrics */}
-                <div style={{ display: 'flex', gap: 28, flex: 1 }}>
+                <div className="clinic-card-metrics" style={{ display: 'flex', gap: 28, flex: 1 }}>
                   <Metric label="Clientes" value={String(c.total_clientes)} />
                   <Metric label="Agendamentos" value={String(c.total_agendamentos)} />
                   <Metric label="Equipe" value={String(c.total_equipe)} />
@@ -421,7 +422,7 @@ const Clinicas = () => {
                 </div>
 
                 {/* Health + Status */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <div className="clinic-card-status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <HealthBar value={c.health_score} />
                   <Badge variant={PLANOS.find(p => p.value === c.plano)?.badge ?? 'neutral'}>
                     {PLANOS.find(p => p.value === c.plano)?.label ?? c.plano}
@@ -455,7 +456,7 @@ const Clinicas = () => {
           <div style={{
             position: 'fixed', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 420, background: 'var(--surface)',
+            width: 'calc(100% - 32px)', maxWidth: 420, background: 'var(--surface)',
             border: '1px solid var(--border)', borderRadius: 'var(--r)',
             zIndex: 201, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
@@ -548,7 +549,8 @@ const Clinicas = () => {
           <div style={{
             position: 'fixed',
             top: 0, right: 0, bottom: 0,
-            width: 440,
+            width: '100%',
+            maxWidth: 440,
             background: 'var(--surface)',
             borderLeft: '1px solid var(--border)',
             zIndex: 101,

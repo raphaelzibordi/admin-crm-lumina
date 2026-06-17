@@ -239,7 +239,7 @@ const GlobalDashboard = () => {
           <div style={{
             position: 'fixed', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 420, background: 'var(--surface)',
+            width: 'calc(100% - 32px)', maxWidth: 420, background: 'var(--surface)',
             border: '1px solid var(--border)', borderRadius: 'var(--r)',
             zIndex: 201, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>

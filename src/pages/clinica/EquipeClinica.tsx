@@ -69,7 +69,8 @@ const EditModal = ({ membro, onClose, onSaved }: EditModalProps) => {
         background: 'var(--surface)',
         border: '1px solid var(--border)',
         borderRadius: 10,
-        width: 420,
+        width: 'calc(100% - 32px)',
+        maxWidth: 420,
         padding: '22px 24px',
         boxShadow: '0 8px 32px rgba(0,0,0,.12)',
       }}>

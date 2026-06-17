@@ -80,3 +80,44 @@
   padding: 20px;
   background: var(--bg);
 }
+
+/* ── Topbar Responsiveness ────────────────────────────────────────────────── */
+.menu-toggle-btn {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.menu-toggle-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+@media (max-width: 1024px) {
+  .menu-toggle-btn {
+    display: flex;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .shell {
+    height: 100vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .bc-parent {
+    display: none;
+  }
+  .pbody {
+    padding: 12px;
+  }
+}
