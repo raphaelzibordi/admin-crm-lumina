@@ -87,6 +87,8 @@ const FeatureFlags = () => {
       const { error } = await supabase.from('feature_flags').upsert(updates);
       if (error) throw error;
       
+      alert('As alterações foram publicadas com sucesso para todas as clínicas!');
+      
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {
