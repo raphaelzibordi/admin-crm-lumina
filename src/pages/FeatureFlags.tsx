@@ -9,6 +9,7 @@ const PLANS: { key: Plan; label: string; color: string; bg: string }[] = [
   { key: 'basico',     label: 'Básico',     color: '#4b5563', bg: '#f3f4f6' },
   { key: 'pro',        label: 'Pro',         color: '#1d4ed8', bg: '#eff6ff' },
   { key: 'enterprise', label: 'Enterprise',  color: '#7c3aed', bg: '#f5f3ff' },
+  { key: 'vip',        label: 'VIP',         color: '#ca8a04', bg: '#fefce8' },
 ];
 
 const PlanToggle = ({

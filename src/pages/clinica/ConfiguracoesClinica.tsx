@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { Button, Card, CardHeader, Tabs, Toggle, Alert } from '../../components/ui';
-import { fetchClinicaConfig, updateClinicaConfig } from '../../lib/crmQueries';
+import { fetchClinicaConfig, updateClinicaConfig, fetchClinicaBillingInfo } from '../../lib/crmQueries';
 import type { ClinicaConfig } from '../../lib/crmQueries';
+import { useFeatureFlags, normalizePlan } from '../../contexts/FeatureFlagsContext';
 import '../../components/ui/ui.css';
 
 // ── Masks ─────────────────────────────────────────────────────────────────────
@@ -163,6 +164,8 @@ const ConfiguracoesClinica = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [plano, setPlano] = useState<string | null>(null);
+  const { isEnabled } = useFeatureFlags();
   const [horarios, setHorarios] = useState(
     dias.map((d, i) => ({ dia: d, ativo: i < 6, abertura: '08:00', fechamento: '18:00' }))
   );
@@ -189,7 +192,14 @@ const ConfiguracoesClinica = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+      
+    fetchClinicaBillingInfo(clinicId).then(info => {
+      if (info) setPlano(info.plano);
+    }).catch(() => {});
   }, [clinicId]);
+
+  const plan = plano ? normalizePlan(plano) : null;
+  const wppEnabled = isEnabled('whatsapp', plan);
 
   const allFields = [...INFO_FIELDS, ...ADDR_FIELDS];
   const hasErrors = allFields.some(f =>
@@ -335,7 +345,7 @@ const ConfiguracoesClinica = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
             {[
               { key: 'confirmacaoEmail' as const, label: 'Confirmação de agendamento (E-mail)', desc: 'Enviar e-mail ao cliente após novo agendamento' },
-              { key: 'lembreteWhatsapp' as const, label: 'Lembrete 24h antes (WhatsApp)', desc: 'Lembrar o cliente 24h antes do procedimento via WhatsApp' },
+              ...(wppEnabled ? [{ key: 'lembreteWhatsapp' as const, label: 'Lembrete 24h antes (WhatsApp)', desc: 'Lembrar o cliente 24h antes do procedimento via WhatsApp' }] : []),
               { key: 'cancelamentoEmail' as const, label: 'Notificação de cancelamento (E-mail)', desc: 'Avisar o profissional e o cliente em caso de cancelamento' },
               { key: 'relatorioSemanal' as const, label: 'Relatório semanal (E-mail)', desc: 'Enviar resumo semanal de desempenho ao dono da clínica' },
             ].map((n) => (
@@ -358,7 +368,7 @@ const ConfiguracoesClinica = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[
             { nome: 'Google Calendar', desc: 'Sincronizar agendamentos com o Google Calendar', conectado: true  },
-            { nome: 'WhatsApp Business', desc: 'Enviar notificações e lembretes pelo WhatsApp', conectado: true  },
+            ...(wppEnabled ? [{ nome: 'WhatsApp Business', desc: 'Enviar notificações e lembretes pelo WhatsApp', conectado: true  }] : []),
             { nome: 'AbacatePay', desc: 'Processar pagamentos e assinaturas online',           conectado: false },
             { nome: 'Prontuário Digital', desc: 'Integração com sistema de prontuário eletrônico', conectado: false },
           ].map((integ, i) => (

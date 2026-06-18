@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useFeatureFlags, normalizePlan } from '../../contexts/FeatureFlagsContext';
 import './Sidebar.css';
 
 interface ClinicContext {
@@ -55,7 +56,9 @@ const PLAN_LABELS: Record<string, string> = {
 
 const Sidebar = ({ clinicContext, onClose }: SidebarProps) => {
   const navigate = useNavigate();
+  const { isEnabled } = useFeatureFlags();
   const clinicId = clinicContext?.id;
+  const plan = clinicContext ? normalizePlan(clinicContext.plan) : null;
 
   return (
     <div className="sidebar">
@@ -85,14 +88,20 @@ const Sidebar = ({ clinicContext, onClose }: SidebarProps) => {
             <SidebarNavItem to={`/clinicas/${clinicId}/clientes`}      icon="person"   label="Clientes" onClick={onClose} />
             <SidebarNavItem to={`/clinicas/${clinicId}/equipe`}        icon="users"    label="Equipe" onClick={onClose} />
             <SidebarNavItem to={`/clinicas/${clinicId}/procedimentos`} icon="clock"    label="Procedimentos" onClick={onClose} />
-            <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" onClick={onClose} />
+            {isEnabled('gestao-salas', plan) && (
+              <SidebarNavItem to={`/clinicas/${clinicId}/salas`}         icon="building" label="Salas" onClick={onClose} />
+            )}
             <SidebarNavItem to={`/clinicas/${clinicId}/agenda`}        icon="calendar" label="Agenda" onClick={onClose} />
           </div>
 
           <div className="sb-sec">
             <div className="sb-sec-label">Financeiro</div>
-            <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`}  icon="bars"       label="Relatórios" onClick={onClose} />
-            <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`}   icon="commission" label="Comissões" onClick={onClose} />
+            {isEnabled('relatorios-avancados', plan) && (
+              <SidebarNavItem to={`/clinicas/${clinicId}/relatorios`}  icon="bars"       label="Relatórios" onClick={onClose} />
+            )}
+            {isEnabled('financeiro-avancado', plan) && (
+              <SidebarNavItem to={`/clinicas/${clinicId}/comissoes`}   icon="commission" label="Comissões" onClick={onClose} />
+            )}
             <SidebarNavItem to={`/clinicas/${clinicId}/faturamento`} icon="credit"     label="Faturamento" onClick={onClose} />
           </div>
 
