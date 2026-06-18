@@ -158,13 +158,11 @@ const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(null)
 
 export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [flags, setFlags] = useState<FeatureFlag[]>(INITIAL_FLAGS);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.from('feature_flags').select('*').then(({ data, error }) => {
       if (error || !data) {
         console.error('Erro ao buscar feature flags:', error);
-        setLoading(false);
         return;
       }
       
@@ -187,7 +185,6 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
         }
         return merged;
       });
-      setLoading(false);
     });
   }, []);
 
