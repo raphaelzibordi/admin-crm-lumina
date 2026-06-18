@@ -1,4 +1,5 @@
 import { crmQuery, crmPatch, crmPost, crmDelete } from './crmClient';
+import { supabase } from './supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -412,11 +413,17 @@ export async function updateClinicaConfig(clinicaId: string, updates: Partial<Cl
 }
 
 export async function fetchFaturasClinica(clinicaId: string): Promise<FaturaAbacatePay[]> {
-  return crmQuery<FaturaAbacatePay>('faturas_abacatepay', {
-    select: 'id,clinica_id,valor,status,mes_referencia,url_nota_fiscal,abacatepay_invoice_id,created_at',
-    filters: { clinica_id: `eq.${clinicaId}` },
-    order: 'mes_referencia.desc',
-  });
+  const { data, error } = await supabase
+    .from('faturas_abacatepay')
+    .select('id,clinica_id,valor,status,mes_referencia,url_nota_fiscal,abacatepay_invoice_id,created_at')
+    .eq('clinica_id', clinicaId)
+    .order('mes_referencia', { ascending: false });
+
+  if (error) {
+    throw new Error(`Supabase query failed [faturas_abacatepay]: ${error.message}`);
+  }
+
+  return data as FaturaAbacatePay[];
 }
 
 export async function abacatepayCheckoutUrl(clinicaId: string, plano: string): Promise<string> {
