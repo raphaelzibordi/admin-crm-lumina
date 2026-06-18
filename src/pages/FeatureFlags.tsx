@@ -3,7 +3,7 @@ import AppShell from '../components/layout/AppShell';
 import { Button, Card, CardHeader, Alert } from '../components/ui';
 import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import type { Plan } from '../contexts/FeatureFlagsContext';
-import { supabase } from '../lib/supabase';
+import { supabaseCrm as supabase } from '../lib/supabaseCrm';
 import '../components/ui/ui.css';
 
 const PLANS: { key: Plan; label: string; color: string; bg: string }[] = [

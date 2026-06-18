@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabaseCrm as supabase } from '../lib/supabaseCrm';
 
 export type Plan = 'basico' | 'pro' | 'enterprise' | 'vip';
 
