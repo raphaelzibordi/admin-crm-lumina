@@ -89,9 +89,9 @@ const FeatureFlags = () => {
       
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar feature flags:', err);
-      alert('Erro ao salvar as configurações.');
+      alert('Erro ao salvar as configurações. Detalhes: ' + (err.message || JSON.stringify(err)));
     }
   };
 
