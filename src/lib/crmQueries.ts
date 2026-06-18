@@ -93,6 +93,17 @@ export interface Agendamento {
   created_at: string;
 }
 
+export interface FaturaAbacatePay {
+  id: string;
+  clinica_id: string;
+  valor: number;
+  status: string;
+  mes_referencia: string;
+  url_nota_fiscal: string | null;
+  abacatepay_invoice_id: string | null;
+  created_at: string;
+}
+
 // ── Health score ──────────────────────────────────────────────────────────────
 
 function calcHealth(clientes: number, agendamentos: number, equipe: number, receita: number): number {
@@ -378,6 +389,15 @@ export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinic
   return rows[0] ?? null;
 }
 
+export async function fetchClinicaBillingInfo(clinicaId: string): Promise<{ plano: string; abacatepay_subscription_status: string | null; acesso_expira_em: string | null; created_at: string; } | null> {
+  const rows = await crmQuery<{ plano: string; abacatepay_subscription_status: string | null; acesso_expira_em: string | null; created_at: string; }>('usuarios', {
+    select: 'plano,abacatepay_subscription_status,acesso_expira_em,created_at',
+    filters: { id: `eq.${clinicaId}` },
+    limit: 1,
+  });
+  return rows[0] ?? null;
+}
+
 export async function fetchClinicaConfig(clinicaId: string): Promise<ClinicaConfig | null> {
   const rows = await crmQuery<ClinicaConfig>('usuarios', {
     select: 'nome_clinica,email,telefone,cnpj,site,nome,cpf,cep,rua,bairro,cidade,estado',
@@ -389,4 +409,48 @@ export async function fetchClinicaConfig(clinicaId: string): Promise<ClinicaConf
 
 export async function updateClinicaConfig(clinicaId: string, updates: Partial<ClinicaConfig>): Promise<void> {
   await crmPatch('usuarios', clinicaId, updates as Record<string, unknown>);
+}
+
+export async function fetchFaturasClinica(clinicaId: string): Promise<FaturaAbacatePay[]> {
+  return crmQuery<FaturaAbacatePay>('faturas_abacatepay', {
+    select: 'id,clinica_id,valor,status,mes_referencia,url_nota_fiscal,abacatepay_invoice_id,created_at',
+    filters: { clinica_id: `eq.${clinicaId}` },
+    order: 'mes_referencia.desc',
+  });
+}
+
+export async function abacatepayCheckoutUrl(clinicaId: string, plano: string): Promise<string> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string).replace(/\/functions\/v1\/.*$/, '/functions/v1/abacatepay-checkout'),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ clinica_id: clinicaId, action: 'change_plan', plano }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+  return json.url;
+}
+
+export async function abacatepayUpdatePaymentMethodUrl(clinicaId: string): Promise<string> {
+  const res = await fetch(
+    (import.meta.env.VITE_CRM_QUERY_URL as string).replace(/\/functions\/v1\/.*$/, '/functions/v1/abacatepay-checkout'),
+    {
+      method: 'POST',
+      headers: {
+        'apikey': import.meta.env.VITE_CRM_ANON_KEY as string,
+        'Authorization': `Bearer ${import.meta.env.VITE_CRM_ANON_KEY as string}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ clinica_id: clinicaId, action: 'update_payment_method' }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+  return json.url;
 }

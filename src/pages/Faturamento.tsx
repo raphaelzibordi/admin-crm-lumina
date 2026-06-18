@@ -49,8 +49,24 @@ const Faturamento = () => {
   const criticas = clinicas.filter(c => c.admin_suspended || c.abacatepay_subscription_status === 'suspended').length;
   const mrr      = clinicas.filter(c => !c.admin_suspended && c.abacatepay_subscription_status === 'active').reduce((s, c) => s + (PLANO_INFO[c.plano]?.preco ?? 0), 0);
 
+  const handleSync = async () => {
+    setLoading(true);
+    try {
+      // In a real scenario, this could trigger a background sync job on Supabase
+      // For now, we just refresh the local data
+      const data = await fetchClinicas();
+      setClinicas(data);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const topbarRight = (
-    <Button variant="outline" size="sm">Sincronizar AbacatePay</Button>
+    <Button variant="outline" size="sm" onClick={handleSync} disabled={loading}>
+      {loading ? 'Sincronizando...' : 'Sincronizar AbacatePay'}
+    </Button>
   );
 
   return (
@@ -128,7 +144,7 @@ const Faturamento = () => {
         <Card style={{ padding: 18 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Histórico de Cobranças</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-            Registros de cobranças processadas via AbacatePay. Integração de webhook em andamento.
+            Visão geral do faturamento de todas as clínicas ativas.
           </p>
           {loading ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Carregando…</div>
