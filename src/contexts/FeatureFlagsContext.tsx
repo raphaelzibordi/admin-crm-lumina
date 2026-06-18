@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 export type Plan = 'basico' | 'pro' | 'enterprise' | 'vip';
 
@@ -157,6 +158,38 @@ const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(null)
 
 export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [flags, setFlags] = useState<FeatureFlag[]>(INITIAL_FLAGS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from('feature_flags').select('*').then(({ data, error }) => {
+      if (error || !data) {
+        console.error('Erro ao buscar feature flags:', error);
+        setLoading(false);
+        return;
+      }
+      
+      const loadedFlags: FeatureFlag[] = data.map((row: any) => ({
+        id: row.id,
+        nome: row.nome,
+        desc: row.desc,
+        modulo: row.modulo,
+        enabledForPlans: row.enabled_for_plans,
+        beta: row.beta
+      }));
+      
+      // Mescla com as flags iniciais (caso haja alguma nova no código que ainda não está no banco)
+      setFlags(prev => {
+        const merged = [...loadedFlags];
+        for (const init of prev) {
+          if (!merged.find(f => f.id === init.id)) {
+            merged.push(init);
+          }
+        }
+        return merged;
+      });
+      setLoading(false);
+    });
+  }, []);
 
   const isEnabled = (flagId: string, plan: Plan | null): boolean => {
     if (!plan) return true;

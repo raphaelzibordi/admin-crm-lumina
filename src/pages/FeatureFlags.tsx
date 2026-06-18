@@ -3,6 +3,7 @@ import AppShell from '../components/layout/AppShell';
 import { Button, Card, CardHeader, Alert } from '../components/ui';
 import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import type { Plan } from '../contexts/FeatureFlagsContext';
+import { supabase } from '../lib/supabase';
 import '../components/ui/ui.css';
 
 const PLANS: { key: Plan; label: string; color: string; bg: string }[] = [
@@ -72,9 +73,26 @@ const FeatureFlags = () => {
     );
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      const updates = flags.map(f => ({
+        id: f.id,
+        nome: f.nome,
+        desc: f.desc,
+        modulo: f.modulo,
+        enabled_for_plans: f.enabledForPlans,
+        beta: f.beta || false
+      }));
+      
+      const { error } = await supabase.from('feature_flags').upsert(updates);
+      if (error) throw error;
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Erro ao salvar feature flags:', err);
+      alert('Erro ao salvar as configurações.');
+    }
   };
 
   const modules = [...new Set(flags.map(f => f.modulo))];
