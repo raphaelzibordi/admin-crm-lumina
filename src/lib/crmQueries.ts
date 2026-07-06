@@ -56,7 +56,9 @@ export interface Procedimento {
   descricao: string | null;
   preco: number;
   duracao_minutos: number;
-  sala_requerida: boolean;
+  validade_dias: number;
+  // Nome da sala requerida (texto livre no banco), não um booleano
+  sala_requerida: string | null;
   profissional_responsavel: string | null;
   booking_visivel: boolean;
   created_at: string;
@@ -225,10 +227,46 @@ export async function fetchEquipeClinica(clinicaId: string): Promise<MembroEquip
 
 export async function fetchProcedimentosClinica(clinicaId: string): Promise<Procedimento[]> {
   return crmQuery<Procedimento>('procedimentos', {
-    select: 'id,user_id,nome,descricao,preco,duracao_minutos,sala_requerida,profissional_responsavel,booking_visivel,created_at',
+    select: 'id,user_id,nome,descricao,preco,duracao_minutos,validade_dias,sala_requerida,profissional_responsavel,booking_visivel,created_at',
     filters: { user_id: `eq.${clinicaId}` },
     order: 'created_at.desc',
   });
+}
+
+export interface ProcedimentoInput {
+  nome: string;
+  descricao?: string | null;
+  preco?: number;
+  duracao_minutos?: number;
+  validade_dias?: number;
+  sala_requerida?: string | null;
+  profissional_responsavel?: string | null;
+  booking_visivel?: boolean;
+}
+
+export async function createProcedimento(clinicaId: string, data: ProcedimentoInput): Promise<void> {
+  await crmPost('procedimentos', {
+    user_id: clinicaId,
+    nome: data.nome,
+    descricao: data.descricao ?? null,
+    preco: data.preco ?? 0,
+    duracao_minutos: data.duracao_minutos ?? 60,
+    validade_dias: data.validade_dias ?? 120,
+    sala_requerida: data.sala_requerida ?? null,
+    profissional_responsavel: data.profissional_responsavel ?? null,
+    booking_visivel: data.booking_visivel ?? false,
+  });
+}
+
+export async function updateProcedimento(
+  procedimentoId: string,
+  updates: Partial<ProcedimentoInput>,
+): Promise<void> {
+  await crmPatch('procedimentos', procedimentoId, updates as Record<string, unknown>);
+}
+
+export async function deleteProcedimento(procedimentoId: string): Promise<void> {
+  await crmDelete('procedimentos', procedimentoId);
 }
 
 // Salas vivem na tabela `rooms` (name/description/status) — é a tabela que o app
