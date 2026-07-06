@@ -231,23 +231,46 @@ export async function fetchProcedimentosClinica(clinicaId: string): Promise<Proc
   });
 }
 
+// Salas vivem na tabela `rooms` (name/description/status) — é a tabela que o app
+// das clínicas usa. `salas` é legado e não deve mais ser escrita.
+interface RoomRow {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  status: 'ativa' | 'inativa';
+  profissional_id: string | null;
+  created_at: string;
+}
+
+const roomToSala = (r: RoomRow): Sala => ({
+  id: r.id,
+  user_id: r.user_id,
+  nome: r.name,
+  descricao: r.description,
+  ativo: r.status === 'ativa',
+  profissional_id: r.profissional_id,
+  created_at: r.created_at,
+});
+
 export async function fetchSalasClinica(clinicaId: string): Promise<Sala[]> {
-  return crmQuery<Sala>('salas', {
-    select: 'id,user_id,nome,descricao,ativo,profissional_id,created_at',
+  const rows = await crmQuery<RoomRow>('rooms', {
+    select: 'id,user_id,name,description,status,profissional_id,created_at',
     filters: { user_id: `eq.${clinicaId}` },
     order: 'created_at.desc',
   });
+  return rows.map(roomToSala);
 }
 
 export async function createSala(
   clinicaId: string,
   data: { nome: string; descricao?: string | null; ativo?: boolean },
 ): Promise<void> {
-  await crmPost('salas', {
+  await crmPost('rooms', {
     user_id: clinicaId,
-    nome: data.nome,
-    descricao: data.descricao ?? null,
-    ativo: data.ativo ?? true,
+    name: data.nome,
+    description: data.descricao ?? null,
+    status: (data.ativo ?? true) ? 'ativa' : 'inativa',
     profissional_id: null,
   });
 }
@@ -256,11 +279,16 @@ export async function updateSala(
   salaId: string,
   updates: Partial<{ nome: string; descricao: string | null; ativo: boolean; profissional_id: string | null }>,
 ): Promise<void> {
-  await crmPatch('salas', salaId, updates as Record<string, unknown>);
+  const roomUpdates: Record<string, unknown> = {};
+  if (updates.nome !== undefined) roomUpdates.name = updates.nome;
+  if (updates.descricao !== undefined) roomUpdates.description = updates.descricao;
+  if (updates.ativo !== undefined) roomUpdates.status = updates.ativo ? 'ativa' : 'inativa';
+  if (updates.profissional_id !== undefined) roomUpdates.profissional_id = updates.profissional_id;
+  await crmPatch('rooms', salaId, roomUpdates);
 }
 
 export async function deleteSala(salaId: string): Promise<void> {
-  await crmDelete('salas', salaId);
+  await crmDelete('rooms', salaId);
 }
 
 export async function fetchAgendamentosClinica(clinicaId: string): Promise<Agendamento[]> {
