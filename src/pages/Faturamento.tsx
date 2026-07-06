@@ -11,7 +11,7 @@ const PLANO_INFO: Record<PlanoClinica, { label: string; variant: 'purple' | 'inf
   basico:     { label: 'Básico',     variant: 'neutral', preco: 39.90  },
   pro:        { label: 'Pro',        variant: 'info',    preco: 89.90  },
   enterprise: { label: 'Enterprise', variant: 'purple',  preco: 119.90 },
-  vip:        { label: 'VIP',        variant: 'teal',    preco: 119.90 },
+  vip:        { label: 'VIP',        variant: 'teal',    preco: 0 },
 };
 
 const BILLING_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' }> = {
