@@ -29,6 +29,17 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
         throw error;
       }
 
+      // O auth é compartilhado com as clínicas do CRM: só entra quem está em admin_members
+      const { data: members, error: memberError } = await supabase
+        .from('admin_members')
+        .select('id')
+        .limit(1);
+
+      if (memberError || !members || members.length === 0) {
+        await supabase.auth.signOut();
+        throw new Error('Acesso restrito à equipe administrativa Lumina.');
+      }
+
       onLoginSuccess();
     } catch (err: any) {
       setError(err.message || 'Falha ao realizar login. Verifique suas credenciais.');

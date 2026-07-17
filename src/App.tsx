@@ -43,6 +43,24 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // O auth é compartilhado com as clínicas do CRM: sessões sem registro em
+  // admin_members são encerradas (RLS só retorna linhas para membros do admin)
+  useEffect(() => {
+    if (!session) return
+    let cancelled = false
+    supabase
+      .from('admin_members')
+      .select('id')
+      .limit(1)
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error || !data || data.length === 0) {
+          supabase.auth.signOut()
+        }
+      })
+    return () => { cancelled = true }
+  }, [session])
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg)' }}>
