@@ -38,6 +38,24 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+// Best-effort: tenta enviar o e-mail via Resend, mas nunca falha a operação por causa
+// disso — o link retornado ao admin é o caminho garantido de entrega.
+async function tryResendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) return false;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'Lumina <no-reply@luminaclin.com>', to: [to], subject, html }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('[admin-query] falha ao enviar e-mail via Resend:', err);
+    return false;
+  }
+}
+
 async function handleCreateClinica(data: Record<string, unknown> | undefined) {
   const nome_clinica = typeof data?.nome_clinica === 'string' ? data.nome_clinica.trim() : '';
   const email = typeof data?.email === 'string' ? data.email.trim() : '';
@@ -49,19 +67,29 @@ async function handleCreateClinica(data: Record<string, unknown> | undefined) {
   // O trigger `on_auth_user_created` (handle_new_user) cria a linha em `usuarios`
   // automaticamente a partir de raw_user_meta_data — não inserir manualmente aqui
   // (causaria "duplicate key value violates unique constraint usuarios_pkey").
-  const { data: inviteData, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${CRM_URL}/definir-senha`,
-    data: { nome_clinica, plano },
+  // Usa generateLink (não inviteUserByEmail) para poder devolver o link ao admin
+  // mesmo que o envio de e-mail falhe (rate limit do Supabase, SMTP não configurado etc.).
+  const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo: `${CRM_URL}/definir-senha`, data: { nome_clinica, plano } },
   });
 
-  if (inviteErr || !inviteData?.user) {
-    const msg = /already.*registered/i.test(inviteErr?.message ?? '')
+  if (linkErr || !linkData?.properties?.action_link) {
+    const msg = /already.*registered/i.test(linkErr?.message ?? '')
       ? 'Já existe uma conta com este e-mail.'
-      : (inviteErr?.message ?? 'Não foi possível criar o usuário de acesso.');
+      : (linkErr?.message ?? 'Não foi possível criar o usuário de acesso.');
     return json({ error: msg }, 400);
   }
 
-  return json({ success: true });
+  const link = linkData.properties.action_link;
+  const emailSent = await tryResendEmail(
+    email,
+    `Convite de acesso — ${nome_clinica}`,
+    `<p>Olá! Aqui está seu link de acesso à plataforma Lumina para <strong>${nome_clinica}</strong>:</p><p><a href="${link}">${link}</a></p>`,
+  );
+
+  return json({ success: true, link, emailSent });
 }
 
 async function handleDeleteClinica(id: string | undefined) {
@@ -157,28 +185,14 @@ async function handleResendInvite(email: string | undefined, nome_clinica: strin
     return json({ error: linkErr?.message ?? 'Não foi possível gerar o link de acesso.' }, 400);
   }
 
-  const resendKey = Deno.env.get('RESEND_API_KEY');
-  if (!resendKey) {
-    return json({ error: 'RESEND_API_KEY não configurado no projeto Supabase — não é possível reenviar o convite por e-mail.' }, 500);
-  }
+  const link = linkData.properties.action_link;
+  const emailSent = await tryResendEmail(
+    email,
+    `Convite de acesso — ${nome_clinica ?? 'Lumina'}`,
+    `<p>Olá! Aqui está seu link de acesso à plataforma Lumina${nome_clinica ? ` para <strong>${nome_clinica}</strong>` : ''}:</p><p><a href="${link}">${link}</a></p>`,
+  );
 
-  const emailRes = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: 'Lumina <no-reply@luminaclin.com>',
-      to: [email],
-      subject: `Convite de acesso — ${nome_clinica ?? 'Lumina'}`,
-      html: `<p>Olá! Aqui está seu link de acesso à plataforma Lumina${nome_clinica ? ` para <strong>${nome_clinica}</strong>` : ''}:</p><p><a href="${linkData.properties.action_link}">${linkData.properties.action_link}</a></p>`,
-    }),
-  });
-
-  if (!emailRes.ok) {
-    const detail = await emailRes.text().catch(() => '');
-    return json({ error: `Falha ao enviar e-mail: ${detail}` }, 502);
-  }
-
-  return json({ success: true });
+  return json({ success: true, link, emailSent });
 }
 
 Deno.serve(async (req: Request) => {

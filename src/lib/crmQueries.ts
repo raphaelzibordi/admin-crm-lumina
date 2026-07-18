@@ -397,7 +397,7 @@ export async function archiveClinica(id: string): Promise<void> {
   if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
 }
 
-export async function resendInvite(email: string, nome_clinica: string): Promise<void> {
+export async function resendInvite(email: string, nome_clinica: string): Promise<{ link: string; emailSent: boolean }> {
   const res = await fetch(
     (import.meta.env.VITE_CRM_QUERY_URL as string),
     {
@@ -412,6 +412,7 @@ export async function resendInvite(email: string, nome_clinica: string): Promise
   );
   const json = await res.json();
   if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+  return { link: json.link, emailSent: json.emailSent };
 }
 
 export async function resetClinicaPassword(email: string): Promise<void> {
@@ -430,7 +431,7 @@ export async function resetClinicaPassword(email: string): Promise<void> {
   }
 }
 
-export async function createClinica(data: { nome_clinica: string; email: string; plano: PlanoClinica }): Promise<void> {
+export async function createClinica(data: { nome_clinica: string; email: string; plano: PlanoClinica }): Promise<{ link: string; emailSent: boolean }> {
   const res = await fetch(
     (import.meta.env.VITE_CRM_QUERY_URL as string),
     {
@@ -445,6 +446,7 @@ export async function createClinica(data: { nome_clinica: string; email: string;
   );
   const json = await res.json();
   if (!res.ok || json?.error) throw new Error(json?.error ?? `HTTP ${res.status}`);
+  return { link: json.link, emailSent: json.emailSent };
 }
 
 export async function fetchClinicaInfo(clinicaId: string): Promise<{ nome_clinica: string; email: string } | null> {

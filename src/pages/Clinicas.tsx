@@ -145,6 +145,15 @@ const Clinicas = () => {
   const [newPlano, setNewPlano] = useState<PlanoClinica>('basico');
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createdLink, setCreatedLink] = useState<{ link: string; emailSent: boolean } | null>(null);
+  const [inviteLink, setInviteLink] = useState<{ link: string; emailSent: boolean } | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = (link: string) => {
+    navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const loadClinicas = () => {
     setLoading(true);
@@ -157,16 +166,21 @@ const Clinicas = () => {
   useEffect(() => { loadClinicas(); }, []);
 
   const openModal = () => {
-    setNewNome(''); setNewEmail(''); setNewPlano('basico'); setCreateError(null);
+    setNewNome(''); setNewEmail(''); setNewPlano('basico'); setCreateError(null); setCreatedLink(null);
     setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setCreatedLink(null);
   };
 
   const handleCreate = async () => {
     if (!newNome.trim() || !newEmail.trim()) { setCreateError('Preencha todos os campos.'); return; }
     setCreating(true); setCreateError(null);
     try {
-      await createClinica({ nome_clinica: newNome.trim(), email: newEmail.trim(), plano: newPlano });
-      setShowModal(false);
+      const result = await createClinica({ nome_clinica: newNome.trim(), email: newEmail.trim(), plano: newPlano });
+      setCreatedLink(result);
       loadClinicas();
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : String(e));
@@ -196,9 +210,10 @@ const Clinicas = () => {
     setConfirmDelete(false);
     setConfirmSuspend(false);
     setConfirmArchive(false);
+    setInviteLink(null);
   };
 
-  const closePanel = () => { setSelected(null); setConfirmDelete(false); setConfirmSuspend(false); setConfirmArchive(false); };
+  const closePanel = () => { setSelected(null); setConfirmDelete(false); setConfirmSuspend(false); setConfirmArchive(false); setInviteLink(null); };
 
   const handleSuspend = async () => {
     if (!selected) return;
@@ -288,9 +303,14 @@ const Clinicas = () => {
     if (!selected) return;
     setResending(true);
     setSaveResult(null);
+    setInviteLink(null);
     try {
-      await resendInvite(selected.email, selected.nome_clinica);
-      setSaveResult({ ok: true, msg: 'Convite reenviado com sucesso.' });
+      const result = await resendInvite(selected.email, selected.nome_clinica);
+      setInviteLink(result);
+      setSaveResult({
+        ok: true,
+        msg: result.emailSent ? 'Convite reenviado com sucesso.' : 'Link de acesso gerado — copie e envie manualmente (e-mail não pôde ser enviado).',
+      });
     } catch (e: unknown) {
       setSaveResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -450,7 +470,7 @@ const Clinicas = () => {
       {showModal && (
         <>
           <div
-            onClick={() => setShowModal(false)}
+            onClick={closeModal}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 200 }}
           />
           <div style={{
@@ -462,7 +482,7 @@ const Clinicas = () => {
           }}>
             <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: 'var(--text-main)' }}>Nova Clínica</div>
-              <button onClick={() => setShowModal(false)} style={{
+              <button onClick={closeModal} style={{
                 width: 28, height: 28, border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
                 background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--text-muted)',
@@ -472,62 +492,80 @@ const Clinicas = () => {
                 </svg>
               </button>
             </div>
-            <div style={{ padding: 20 }}>
-              <label style={{ display: 'block', marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Nome da clínica</span>
-                <input type="text" value={newNome} onChange={e => setNewNome(e.target.value)} style={fieldStyle} placeholder="Ex: Clínica São Paulo" autoFocus />
-              </label>
-              <label style={{ display: 'block', marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>E-mail</span>
-                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} style={fieldStyle} placeholder="contato@clinica.com.br" />
-              </label>
-              <label style={{ display: 'block', marginBottom: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
-              </label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: newPlano === 'vip' ? 8 : 20 }}>
-                {PLANOS.map(p => {
-                  const isActive = newPlano === p.value;
-                  const isVip = p.value === 'vip';
-                  return (
-                    <button key={p.value} type="button" onClick={() => setNewPlano(p.value)} style={{
-                      flex: 1, padding: '8px 0',
-                      border: isActive
-                        ? `2px solid ${isVip ? '#0d9488' : 'var(--primary)'}`
-                        : '2px solid var(--border)',
-                      borderRadius: 'var(--r-sm)',
-                      background: isActive
-                        ? (isVip ? '#f0fdfa' : 'var(--primary-light)')
-                        : 'var(--surface)',
-                      color: isActive
-                        ? (isVip ? '#0d9488' : 'var(--primary-dark)')
-                        : 'var(--text-secondary)',
-                      fontSize: 12.5, fontWeight: isActive ? 700 : 500,
-                      cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
-                    }}>
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {newPlano === 'vip' && (
-                <div style={{
-                  marginBottom: 16, padding: '8px 12px',
-                  background: '#f0fdfa', border: '1px solid #99f6e4',
-                  borderRadius: 'var(--r-sm)', fontSize: 11.5, color: '#0d9488',
-                }}>
-                  ✦ Parceiro VIP — acesso gratuito com todas as permissões Enterprise. Nenhuma cobrança será gerada.
+            {createdLink ? (
+              <div style={{ padding: 20 }}>
+                <div className="alert a-info" style={{ marginBottom: 14 }}>
+                  Clínica criada com sucesso{createdLink.emailSent ? ' — convite enviado por e-mail.' : '. O e-mail não pôde ser enviado — copie o link abaixo e envie manualmente.'}
                 </div>
-              )}
-              {createError && (
-                <div className="alert a-danger" style={{ marginBottom: 14 }}>{createError}</div>
-              )}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Button variant="primary" size="sm" onClick={handleCreate} disabled={creating}>
-                  {creating ? 'Criando…' : 'Criar clínica'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowModal(false)}>Cancelar</Button>
+                <label style={{ display: 'block', marginBottom: 14 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Link de acesso</span>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <input type="text" readOnly value={createdLink.link} style={{ ...fieldStyle, marginTop: 0, fontSize: 11.5 }} onFocus={e => e.target.select()} />
+                    <Button variant="outline" size="sm" onClick={() => copyLink(createdLink.link)}>
+                      {linkCopied ? 'Copiado!' : 'Copiar'}
+                    </Button>
+                  </div>
+                </label>
+                <Button variant="primary" size="sm" onClick={closeModal}>Concluir</Button>
               </div>
-            </div>
+            ) : (
+              <div style={{ padding: 20 }}>
+                <label style={{ display: 'block', marginBottom: 14 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Nome da clínica</span>
+                  <input type="text" value={newNome} onChange={e => setNewNome(e.target.value)} style={fieldStyle} placeholder="Ex: Clínica São Paulo" autoFocus />
+                </label>
+                <label style={{ display: 'block', marginBottom: 14 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>E-mail</span>
+                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} style={fieldStyle} placeholder="contato@clinica.com.br" />
+                </label>
+                <label style={{ display: 'block', marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Plano</span>
+                </label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: newPlano === 'vip' ? 8 : 20 }}>
+                  {PLANOS.map(p => {
+                    const isActive = newPlano === p.value;
+                    const isVip = p.value === 'vip';
+                    return (
+                      <button key={p.value} type="button" onClick={() => setNewPlano(p.value)} style={{
+                        flex: 1, padding: '8px 0',
+                        border: isActive
+                          ? `2px solid ${isVip ? '#0d9488' : 'var(--primary)'}`
+                          : '2px solid var(--border)',
+                        borderRadius: 'var(--r-sm)',
+                        background: isActive
+                          ? (isVip ? '#f0fdfa' : 'var(--primary-light)')
+                          : 'var(--surface)',
+                        color: isActive
+                          ? (isVip ? '#0d9488' : 'var(--primary-dark)')
+                          : 'var(--text-secondary)',
+                        fontSize: 12.5, fontWeight: isActive ? 700 : 500,
+                        cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
+                      }}>
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {newPlano === 'vip' && (
+                  <div style={{
+                    marginBottom: 16, padding: '8px 12px',
+                    background: '#f0fdfa', border: '1px solid #99f6e4',
+                    borderRadius: 'var(--r-sm)', fontSize: 11.5, color: '#0d9488',
+                  }}>
+                    ✦ Parceiro VIP — acesso gratuito com todas as permissões Enterprise. Nenhuma cobrança será gerada.
+                  </div>
+                )}
+                {createError && (
+                  <div className="alert a-danger" style={{ marginBottom: 14 }}>{createError}</div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button variant="primary" size="sm" onClick={handleCreate} disabled={creating}>
+                    {creating ? 'Criando…' : 'Criar clínica'}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={closeModal}>Cancelar</Button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -745,6 +783,15 @@ const Clinicas = () => {
               {saveResult && (
                 <div className={`alert ${saveResult.ok ? 'a-info' : 'a-danger'}`} style={{ marginBottom: 14 }}>
                   {saveResult.msg}
+                </div>
+              )}
+
+              {inviteLink && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                  <input type="text" readOnly value={inviteLink.link} style={{ ...fieldStyle, marginTop: 0, fontSize: 11.5 }} onFocus={e => e.target.select()} />
+                  <Button variant="outline" size="sm" onClick={() => copyLink(inviteLink.link)}>
+                    {linkCopied ? 'Copiado!' : 'Copiar'}
+                  </Button>
                 </div>
               )}
 
