@@ -195,6 +195,27 @@ const Atendimento = () => {
     }
   };
 
+  // ── Marcar como resolvida / reabrir ──────────────────────────────────────
+  // Reabre sozinha na próxima mensagem: o trigger de negócio (on_support_message_insert)
+  // sempre recalcula o status a partir de quem mandou a última mensagem, então "resolvida"
+  // não trava a conversa — é só um jeito do admin sinalizar "não precisa de mim agora".
+  const handleToggleResolved = async () => {
+    const conv = conversations.find((c) => c.id === selectedId);
+    if (!conv) return;
+    const novoStatus = conv.status === 'resolvida' ? 'aberta' : 'resolvida';
+    setError(null);
+    try {
+      const { error: err } = await supabase
+        .from('support_conversations')
+        .update({ status: novoStatus })
+        .eq('id', conv.id);
+      if (err) throw err;
+      loadConversations();
+    } catch (e: any) {
+      setError(e?.message ?? 'Não foi possível atualizar o status da conversa.');
+    }
+  };
+
   const selectedConv = conversations.find((c) => c.id === selectedId) ?? null;
 
   return (
@@ -259,11 +280,20 @@ const Atendimento = () => {
             </div>
           ) : (
             <>
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{selectedConv.clinica_nome || 'Clínica'}</h3>
-                <p style={{ fontSize: 11.5, color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                  {selectedConv.clinica_email}
-                </p>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{selectedConv.clinica_nome || 'Clínica'}</h3>
+                  <p style={{ fontSize: 11.5, color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                    {selectedConv.clinica_email}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleResolved}
+                  className="btn btn-o btn-sm"
+                  style={{ flexShrink: 0 }}
+                >
+                  {selectedConv.status === 'resolvida' ? 'Reabrir conversa' : 'Marcar como resolvida'}
+                </button>
               </div>
 
               <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
