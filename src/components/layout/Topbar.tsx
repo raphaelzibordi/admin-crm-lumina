@@ -24,6 +24,7 @@ const Topbar = ({ clinicName, right, onToggleSidebar }: TopbarProps) => {
     '/feature-flags': 'Feature Flags',
     '/seguranca': 'Segurança / LGPD',
     '/equipe-admin': 'Equipe Admin',
+    '/atendimento': 'Atendimento',
   };
 
   const clinicSubpageMap: Record<string, string> = {

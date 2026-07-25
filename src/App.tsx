@@ -14,6 +14,7 @@ import RelatoriosPlataforma from './pages/RelatoriosPlataforma'
 import FeatureFlags from './pages/FeatureFlags'
 import Seguranca from './pages/Seguranca'
 import EquipeAdmin from './pages/EquipeAdmin'
+import Atendimento from './pages/Atendimento'
 
 // Clinic drill-down pages
 import EquipeClinica from './pages/clinica/EquipeClinica'
@@ -85,6 +86,7 @@ function App() {
         <Route path="/feature-flags" element={<FeatureFlags />} />
         <Route path="/seguranca"     element={<Seguranca />} />
         <Route path="/equipe-admin"  element={<EquipeAdmin />} />
+        <Route path="/atendimento"   element={<Atendimento />} />
 
         {/* Clinic Drill-down Level */}
         <Route path="/clinicas/:clinicId/clientes"       element={<ClientesClinica />} />
